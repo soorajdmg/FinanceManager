@@ -2,9 +2,110 @@ import React, { useEffect, useRef, useState } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, PieChart, Activity, ArrowUpRight, ArrowDownRight, Eye, MoreHorizontal, Car, Bus, Plane, Fuel, Dumbbell } from 'lucide-react';
 import './Dashboard.css';
 
+// Move AnimatedPieChart outside of Dashboard component
+const AnimatedPieChart = ({ data, size = 200 }) => {
+  const svgRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  const total = data.reduce((sum, item) => sum + item.amount, 0);
+  const radius = size / 2 - 10;
+  const centerX = size / 2;
+  const centerY = size / 2;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const createPath = (startAngle, endAngle) => {
+    const start = polarToCartesian(centerX, centerY, radius, endAngle);
+    const end = polarToCartesian(centerX, centerY, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+    return [
+      "M", centerX, centerY,
+      "L", start.x, start.y,
+      "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+      "Z"
+    ].join(" ");
+  };
+
+  const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+    const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+    return {
+      x: centerX + (radius * Math.cos(angleInRadians)),
+      y: centerY + (radius * Math.sin(angleInRadians))
+    };
+  };
+
+  const getColor = (colorName) => {
+    const colors = {
+      blue: '#3b82f6',
+      emerald: '#10b981',
+      violet: '#8b5cf6',
+      amber: '#f59e0b'
+    };
+    return colors[colorName] || colors.blue;
+  };
+
+  let currentAngle = 0;
+
+  return (
+    <div className="pie-chart-container">
+      <svg
+        ref={svgRef}
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="pie-chart-svg"
+      >
+        <defs>
+          {data.map((item, index) => (
+            <linearGradient key={index} id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={getColor(item.color)} stopOpacity="1" />
+              <stop offset="100%" stopColor={getColor(item.color)} stopOpacity="0.8" />
+            </linearGradient>
+          ))}
+        </defs>
+
+        {data.map((item, index) => {
+          const angle = (item.amount / total) * 360;
+          const path = createPath(currentAngle, currentAngle + angle);
+          currentAngle += angle;
+
+          return (
+            <path
+              key={index}
+              d={path}
+              fill={`url(#gradient-${index})`}
+              stroke="white"
+              strokeWidth="2"
+              className="pie-slice"
+              style={{
+                transformOrigin: `${centerX}px ${centerY}px`,
+                animation: isVisible ? `pieSliceGrow 0.8s ease-out ${index * 0.1}s both` : 'none'
+              }}
+            />
+          );
+        })}
+
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r="3"
+          fill="white"
+          className="center-dot"
+          style={{
+            animation: isVisible ? 'centerDotPulse 2s ease-in-out infinite 1s' : 'none'
+          }}
+        />
+      </svg>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const incomeExpenseChartRef = useRef(null);
-  const expensePieChartRef = useRef(null);
   const [chartInstances, setChartInstances] = useState({ line: null, pie: null });
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -47,6 +148,36 @@ const Dashboard = () => {
       color: 'amber',
     }
   ];
+
+  const chartData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'Income',
+        data: [4800, 5200, 4900, 5400, 5100, 5200],
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 4,
+        pointBackgroundColor: '#10b981',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+      },
+      {
+        label: 'Expenses',
+        data: [3200, 3600, 3400, 3900, 3700, 3840],
+        borderColor: '#ef4444',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 4,
+        pointBackgroundColor: '#ef4444',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+      }
+    ]
+  };
 
   const recentTransactions = [
     {
@@ -103,12 +234,66 @@ const Dashboard = () => {
 
   useEffect(() => {
     setIsLoaded(true);
-    const initCharts = async () => {
-      // Simulated chart initialization
-      console.log('Charts initialized');
+
+    const initChart = async () => {
+      // Import Chart.js differently
+      if (typeof window.Chart === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js';
+        script.onload = () => {
+          createChart();
+        };
+        document.head.appendChild(script);
+      } else {
+        createChart();
+      }
     };
 
-    initCharts();
+    const createChart = () => {
+      if (incomeExpenseChartRef.current) {
+        // Destroy existing chart if it exists
+        if (chartInstances.line) {
+          chartInstances.line.destroy();
+        }
+
+        const ctx = incomeExpenseChartRef.current.getContext('2d');
+
+        const newChart = new window.Chart(ctx, {
+          type: 'line',
+          data: chartData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                cornerRadius: 8,
+                callbacks: {
+                  label: (context) => context.dataset.label + ': $' + context.parsed.y.toLocaleString()
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: '#64748b' }
+              },
+              y: {
+                grid: { color: '#f1f5f9' },
+                ticks: {
+                  color: '#64748b',
+                  callback: (value) => '$' + (value / 1000) + 'k'
+                }
+              }
+            }
+          }
+        });
+
+        setChartInstances(prev => ({ ...prev, line: newChart }));
+      }
+    };
+    setTimeout(initChart, 100);
   }, []);
 
   const formatCurrency = (amount) => {
@@ -137,7 +322,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className={`dashboard-container ${isLoaded ? 'loaded' : ''}`}>
+    <div 
+      className={`dashboard-container ${isLoaded ? 'loaded' : ''}`}
+    >
       {/* Header Section */}
       <div className="dashboard-padding">
         <div className="dashboard-max-width">
@@ -198,11 +385,8 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="chart-placeholder">
-                <div className="chart-placeholder-content">
-                  <Activity className="chart-icon" />
-                  <p className="chart-placeholder-text">Chart visualization would render here</p>
-                </div>
+              <div className="chart-container">
+                <canvas ref={incomeExpenseChartRef}></canvas>
               </div>
             </div>
 
@@ -213,11 +397,16 @@ const Dashboard = () => {
                 <p className="chart-subtitle">This month breakdown</p>
               </div>
 
-              <div className="chart-placeholder chart-placeholder-small">
-                <div className="chart-placeholder-content">
-                  <PieChart className="chart-icon" />
-                  <p className="chart-placeholder-text">Pie chart would render here</p>
-                </div>
+              <div className="pie-chart-wrapper">
+                <AnimatedPieChart
+                  data={[
+                    { label: 'Housing', amount: 1200, color: 'blue' },
+                    { label: 'Food', amount: 450, color: 'emerald' },
+                    { label: 'Transport', amount: 320, color: 'violet' },
+                    { label: 'Utilities', amount: 180, color: 'amber' }
+                  ]}
+                  size={160}
+                />
               </div>
 
               <div className="expense-breakdown">

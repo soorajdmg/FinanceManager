@@ -206,7 +206,7 @@
     margin: 0;
 }
 
-/* New Category Layout - List Style */
+/* New Category Layout - List Style - MINIMAL HOVER EFFECTS */
 .categories-list {
     display: flex;
     flex-direction: column;
@@ -222,6 +222,7 @@
     position: relative;
     overflow: hidden;
     opacity: 1;
+    /* REMOVED: All hover transform and shadow effects */
 }
 
 .budget-category-item:nth-child(1) { animation-delay: 0.1s; }
@@ -230,11 +231,7 @@
 .budget-category-item:nth-child(4) { animation-delay: 0.4s; }
 .budget-category-item:nth-child(5) { animation-delay: 0.5s; }
 
-/* .budget-category-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03);
-    border-color: rgba(125, 138, 156, 0.3);
-} */
+/* REMOVED: All hover effects for budget-category-item except action button visibility */
 
 .category-item-header {
     display: flex;
@@ -260,7 +257,7 @@
     justify-content: center;
     flex-shrink: 0;
     border: 1px solid rgba(226, 232, 240, 0.6);
-    transition: all 0.3s ease;
+    /* REMOVED: transition and transform effects */
 }
 
 .category-icon svg {
@@ -269,10 +266,7 @@
     color: #64748b;
 }
 
-.budget-category-item:hover .category-icon {
-    transform: scale(1.05);
-    background: #f1f5f9;
-}
+/* REMOVED: category-icon hover transform effect */
 
 .category-info {
     flex: 1;
@@ -320,6 +314,7 @@
     color: #0f172a;
 }
 
+/* ONLY KEEP ACTION BUTTON HOVER VISIBILITY */
 .category-actions {
     display: flex;
     gap: 0.5rem;
@@ -695,7 +690,7 @@
     }
 }
 
-/* Progress bar animation enhancement */
+/* Progress bar animation enhancement - REMOVED hover effects */
 .progress-fill {
     position: relative;
     overflow: hidden;
@@ -722,26 +717,10 @@
     }
 }
 
-/* Hover effect for progress bars */
-.budget-category-item:hover .progress-fill::after {
-    animation-duration: 1.5s;
-}
+/* REMOVED: All hover effect enhancements for budget-category-item */
+/* REMOVED: ::before pseudo-element hover effects for budget-category-item */
 
-/* Enhanced hover effects */
-.budget-category-item::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%);
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    border-radius: 1rem;
-}
-
-.budget-category-item:hover::before {
-    opacity: 1;
-}
-
+/* Keep summary card hover effects */
 .summary-card::before {
     content: '';
     position: absolute;

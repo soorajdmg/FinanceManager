@@ -223,6 +223,17 @@
     color: #475569;
 }
 
+.chart-container {
+    height: 18rem;
+    padding: 1rem;
+    position: relative;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
 /* Charts Section */
 .charts-grid {
     display: grid;
@@ -354,6 +365,62 @@
     font-size: 0.875rem;
     margin: 0;
 }
+
+/* Pie Chart Styles */
+.pie-chart-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+    min-height: 180px;
+}
+
+.pie-chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pie-chart-svg {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.08));
+    transition: all 0.3s ease;
+}
+
+.pie-slice {
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
+}
+
+.pie-slice:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1) saturate(1.1);
+}
+
+/* Animations */
+@keyframes pieSliceGrow {
+    0% {
+        transform: scale(0) rotate(-10deg);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.1) rotate(2deg);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+
+/* Enhanced hover effects for the chart card */
+.chart-secondary:hover .pie-chart-svg {
+    transform: scale(1.02);
+}
+
 
 /* Expense Breakdown */
 .expense-breakdown {
@@ -866,6 +933,10 @@
 
     .chart-card {
         padding: 1.25rem;
+    }
+
+    .pie-chart-wrapper {
+        min-height: 150px;
     }
 
     .transactions-header-new {
