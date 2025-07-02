@@ -41,7 +41,7 @@ const useAuth = () => {
     setIsAuthenticated(false);
   };
 
-  return { isAuthenticated, loading, login, logout };
+  return { isAuthenticated, login, logout };
 };
 
 // Protected Route Component
