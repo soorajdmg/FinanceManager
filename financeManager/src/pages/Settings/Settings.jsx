@@ -501,7 +501,7 @@ const Settings = () => {
                           </div>
                           <button className="action-button danger">
                             <Trash2 className="button-icon" />
-                            Delete Account
+                            Delete
                           </button>
                         </div>
                       </div>

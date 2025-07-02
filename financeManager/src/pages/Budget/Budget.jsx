@@ -1,4 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import {
+    Utensils,
+    Car,
+    Film,
+    ShoppingBag,
+    Zap,
+    Hospital,
+    BookOpen,
+    Plane,
+    Dumbbell,
+    BarChart3,
+    Plus,
+    X,
+    DollarSign,
+    Clipboard,
+    TrendingUp,
+    Trash2
+} from 'lucide-react';
 import './Budget.css';
 
 const Budget = () => {
@@ -9,7 +27,7 @@ const Budget = () => {
             budgetAmount: 800,
             spentAmount: 650,
             carryOver: 50,
-            icon: '🍽️',
+            icon: 'Utensils',
             color: '#3b82f6'
         },
         {
@@ -18,7 +36,7 @@ const Budget = () => {
             budgetAmount: 300,
             spentAmount: 280,
             carryOver: 0,
-            icon: '🚗',
+            icon: 'Car',
             color: '#10b981'
         },
         {
@@ -27,7 +45,7 @@ const Budget = () => {
             budgetAmount: 400,
             spentAmount: 520,
             carryOver: 25,
-            icon: '🎬',
+            icon: 'Film',
             color: '#8b5cf6'
         },
         {
@@ -36,7 +54,7 @@ const Budget = () => {
             budgetAmount: 600,
             spentAmount: 450,
             carryOver: 0,
-            icon: '🛍️',
+            icon: 'ShoppingBag',
             color: '#f59e0b'
         },
         {
@@ -45,7 +63,7 @@ const Budget = () => {
             budgetAmount: 200,
             spentAmount: 180,
             carryOver: 10,
-            icon: '⚡',
+            icon: 'Zap',
             color: '#ef4444'
         },
         {
@@ -54,7 +72,7 @@ const Budget = () => {
             budgetAmount: 250,
             spentAmount: 120,
             carryOver: 0,
-            icon: '🏥',
+            icon: 'Hospital',
             color: '#06b6d4'
         }
     ]);
@@ -64,11 +82,31 @@ const Budget = () => {
         category: '',
         budgetAmount: '',
         carryOver: '',
-        icon: '📊',
+        icon: 'BarChart3',
         color: '#64748b'
     });
 
     const [currentMonth, setCurrentMonth] = useState(new Date().toLocaleString('default', { month: 'long', year: 'numeric' }));
+
+    // Icon mapping
+    const iconMap = {
+        'Utensils': Utensils,
+        'Car': Car,
+        'Film': Film,
+        'ShoppingBag': ShoppingBag,
+        'Zap': Zap,
+        'Hospital': Hospital,
+        'BookOpen': BookOpen,
+        'Plane': Plane,
+        'Dumbbell': Dumbbell,
+        'BarChart3': BarChart3
+    };
+
+    // Get icon component
+    const getIconComponent = (iconName) => {
+        const IconComponent = iconMap[iconName] || BarChart3;
+        return IconComponent;
+    };
 
     // Calculate totals
     const totalBudget = budgets.reduce((sum, budget) => sum + budget.budgetAmount + budget.carryOver, 0);
@@ -92,7 +130,7 @@ const Budget = () => {
                 category: '',
                 budgetAmount: '',
                 carryOver: '',
-                icon: '📊',
+                icon: 'BarChart3',
                 color: '#64748b'
             });
             setShowAddBudget(false);
@@ -116,16 +154,16 @@ const Budget = () => {
     };
 
     const categories = [
-        { name: 'Food & Dining', icon: '🍽️' },
-        { name: 'Transportation', icon: '🚗' },
-        { name: 'Entertainment', icon: '🎬' },
-        { name: 'Shopping', icon: '🛍️' },
-        { name: 'Utilities', icon: '⚡' },
-        { name: 'Healthcare', icon: '🏥' },
-        { name: 'Education', icon: '📚' },
-        { name: 'Travel', icon: '✈️' },
-        { name: 'Fitness', icon: '💪' },
-        { name: 'Other', icon: '📊' }
+        { name: 'Food & Dining', icon: 'Utensils' },
+        { name: 'Transportation', icon: 'Car' },
+        { name: 'Entertainment', icon: 'Film' },
+        { name: 'Shopping', icon: 'ShoppingBag' },
+        { name: 'Utilities', icon: 'Zap' },
+        { name: 'Healthcare', icon: 'Hospital' },
+        { name: 'Education', icon: 'BookOpen' },
+        { name: 'Travel', icon: 'Plane' },
+        { name: 'Fitness', icon: 'Dumbbell' },
+        { name: 'Other', icon: 'BarChart3' }
     ];
 
     return (
@@ -143,9 +181,7 @@ const Budget = () => {
                             className="add-budget-btn"
                             onClick={() => setShowAddBudget(true)}
                         >
-                            <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                            <Plus className="btn-icon" />
                             Add Budget
                         </button>
                     </div>
@@ -156,9 +192,7 @@ const Budget = () => {
                             <div className="summary-card-content">
                                 <div className="summary-header">
                                     <div className="summary-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                                        </svg>
+                                        <DollarSign />
                                     </div>
                                 </div>
                                 <div className="summary-body">
@@ -172,10 +206,7 @@ const Budget = () => {
                             <div className="summary-card-content">
                                 <div className="summary-header">
                                     <div className="summary-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-                                        </svg>
+                                        <Clipboard />
                                     </div>
                                 </div>
                                 <div className="summary-body">
@@ -189,10 +220,7 @@ const Budget = () => {
                             <div className="summary-card-content">
                                 <div className="summary-header">
                                     <div className="summary-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M3 3v18h18" />
-                                            <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
-                                        </svg>
+                                        <TrendingUp />
                                     </div>
                                 </div>
                                 <div className="summary-body">
@@ -213,60 +241,61 @@ const Budget = () => {
                         </div>
 
                         <div className="categories-list">
-                            {budgets.map((budget, index) => (
-                                <div key={budget.id} className="budget-category-item">
-                                    <div className="category-item-header">
-                                        <div className="category-item-left">
-                                            <div className="category-icon">
-                                                <span>{budget.icon}</span>
-                                            </div>
-                                            <div className="category-info">
-                                                <h3 className="category-name">{budget.category}</h3>
-                                                <p className="category-budget">
-                                                    ${budget.budgetAmount.toLocaleString()}
-                                                    {budget.carryOver > 0 && ` (+$${budget.carryOver.toLocaleString()} carry over)`}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="category-item-stats">
-                                            <div className="category-stat">
-                                                <div className="stat-label">Spent</div>
-                                                <div className="stat-value">${budget.spentAmount.toLocaleString()}</div>
-                                            </div>
-                                            <div className="category-stat">
-                                                <div className="stat-label">Remaining</div>
-                                                <div className={`stat-value ${(budget.budgetAmount + budget.carryOver - budget.spentAmount) >= 0 ? 'positive' : 'negative'}`}>
-                                                    ${Math.abs(budget.budgetAmount + budget.carryOver - budget.spentAmount).toLocaleString()}
+                            {budgets.map((budget, index) => {
+                                const IconComponent = getIconComponent(budget.icon);
+                                return (
+                                    <div key={budget.id} className="budget-category-item">
+                                        <div className="category-item-header">
+                                            <div className="category-item-left">
+                                                <div className="category-icon">
+                                                    <IconComponent size={20} />
+                                                </div>
+                                                <div className="category-info">
+                                                    <h3 className="category-name">{budget.category}</h3>
+                                                    <p className="category-budget">
+                                                        ${budget.budgetAmount.toLocaleString()}
+                                                        {budget.carryOver > 0 && ` (+$${budget.carryOver.toLocaleString()} carry over)`}
+                                                    </p>
                                                 </div>
                                             </div>
+                                            <div className="category-item-stats">
+                                                <div className="category-stat">
+                                                    <div className="stat-label">Spent</div>
+                                                    <div className="stat-value">${budget.spentAmount.toLocaleString()}</div>
+                                                </div>
+                                                <div className="category-stat">
+                                                    <div className="stat-label">Remaining</div>
+                                                    <div className={`stat-value ${(budget.budgetAmount + budget.carryOver - budget.spentAmount) >= 0 ? 'positive' : 'negative'}`}>
+                                                        ${Math.abs(budget.budgetAmount + budget.carryOver - budget.spentAmount).toLocaleString()}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="category-actions">
+                                                <button
+                                                    className="action-btn"
+                                                    onClick={() => handleDeleteBudget(budget.id)}
+                                                    title="Delete Budget"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="category-actions">
-                                            <button
-                                                className="action-btn"
-                                                onClick={() => handleDeleteBudget(budget.id)}
-                                                title="Delete Budget"
-                                            >
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
 
-                                    <div className="category-progress-section">
-                                        <div className="progress-info">
-                                            <span className="progress-label">Progress</span>
-                                            <span className="progress-percentage">{Math.round(calculateProgress(budget))}%</span>
-                                        </div>
-                                        <div className="progress-bar">
-                                            <div
-                                                className="progress-fill"
-                                                style={{ width: `${calculateProgress(budget)}%` }}
-                                            ></div>
+                                        <div className="category-progress-section">
+                                            <div className="progress-info">
+                                                <span className="progress-label">Progress</span>
+                                                <span className="progress-percentage">{Math.round(calculateProgress(budget))}%</span>
+                                            </div>
+                                            <div className="progress-bar">
+                                                <div
+                                                    className="progress-fill"
+                                                    style={{ width: `${calculateProgress(budget)}%` }}
+                                                ></div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -280,9 +309,7 @@ const Budget = () => {
                                         className="modal-close"
                                         onClick={() => setShowAddBudget(false)}
                                     >
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M18 6L6 18M6 6l12 12" />
-                                        </svg>
+                                        <X size={16} />
                                     </button>
                                 </div>
 
@@ -297,17 +324,20 @@ const Budget = () => {
                                                 setNewBudget({
                                                     ...newBudget,
                                                     category: e.target.value,
-                                                    icon: selectedCategory?.icon || '📊'
+                                                    icon: selectedCategory?.icon || 'BarChart3'
                                                 });
                                             }}
                                             required
                                         >
                                             <option value="">Select a category</option>
-                                            {categories.map(category => (
-                                                <option key={category.name} value={category.name}>
-                                                    {category.icon} {category.name}
-                                                </option>
-                                            ))}
+                                            {categories.map(category => {
+                                                const IconComponent = getIconComponent(category.icon);
+                                                return (
+                                                    <option key={category.name} value={category.name}>
+                                                        {category.name}
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                     </div>
 

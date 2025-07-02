@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, DollarSign, PieChart, Activity, ArrowUpRight,
 import './Dashboard.css';
 
 // Move AnimatedPieChart outside of Dashboard component
-const AnimatedPieChart = ({ data, size = 200 }) => {
+const AnimatedPieChart = ({ data, size = 200, isDarkMode }) => {
   const svgRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -78,7 +78,7 @@ const AnimatedPieChart = ({ data, size = 200 }) => {
               key={index}
               d={path}
               fill={`url(#gradient-${index})`}
-              stroke="white"
+              stroke={isDarkMode ? "#1e293b" : "white"}
               strokeWidth="2"
               className="pie-slice"
               style={{
@@ -93,7 +93,7 @@ const AnimatedPieChart = ({ data, size = 200 }) => {
           cx={centerX}
           cy={centerY}
           r="3"
-          fill="white"
+          fill={isDarkMode ? "#1e293b" : "white"}
           className="center-dot"
           style={{
             animation: isVisible ? 'centerDotPulse 2s ease-in-out infinite 1s' : 'none'
@@ -104,7 +104,7 @@ const AnimatedPieChart = ({ data, size = 200 }) => {
   );
 };
 
-const Dashboard = () => {
+const Dashboard = ({ isDarkMode }) => {
   const incomeExpenseChartRef = useRef(null);
   const [chartInstances, setChartInstances] = useState({ line: null, pie: null });
   const [isLoaded, setIsLoaded] = useState(false);
@@ -161,7 +161,7 @@ const Dashboard = () => {
         fill: true,
         pointRadius: 4,
         pointBackgroundColor: '#10b981',
-        pointBorderColor: '#ffffff',
+        pointBorderColor: isDarkMode ? '#1e293b' : '#ffffff',
         pointBorderWidth: 2,
       },
       {
@@ -173,7 +173,7 @@ const Dashboard = () => {
         fill: true,
         pointRadius: 4,
         pointBackgroundColor: '#ef4444',
-        pointBorderColor: '#ffffff',
+        pointBorderColor: isDarkMode ? '#1e293b' : '#ffffff',
         pointBorderWidth: 2,
       }
     ]
@@ -267,7 +267,7 @@ const Dashboard = () => {
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0, 0, 0, 0.8)',
                 cornerRadius: 8,
                 callbacks: {
                   label: (context) => context.dataset.label + ': $' + context.parsed.y.toLocaleString()
@@ -277,12 +277,12 @@ const Dashboard = () => {
             scales: {
               x: {
                 grid: { display: false },
-                ticks: { color: '#64748b' }
+                ticks: { color: isDarkMode ? '#94a3b8' : '#64748b' }
               },
               y: {
-                grid: { color: '#f1f5f9' },
+                grid: { color: isDarkMode ? '#334155' : '#f1f5f9' },
                 ticks: {
-                  color: '#64748b',
+                  color: isDarkMode ? '#94a3b8' : '#64748b',
                   callback: (value) => '$' + (value / 1000) + 'k'
                 }
               }
@@ -294,7 +294,7 @@ const Dashboard = () => {
       }
     };
     setTimeout(initChart, 100);
-  }, []);
+  }, [isDarkMode]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -323,7 +323,7 @@ const Dashboard = () => {
 
   return (
     <div 
-      className={`dashboard-container ${isLoaded ? 'loaded' : ''}`}
+      className={`dashboard-container ${isDarkMode ? 'dark' : ''} ${isLoaded ? 'loaded' : ''}`}
     >
       {/* Header Section */}
       <div className="dashboard-padding">
@@ -406,6 +406,7 @@ const Dashboard = () => {
                     { label: 'Utilities', amount: 180, color: 'amber' }
                   ]}
                   size={160}
+                  isDarkMode={isDarkMode}
                 />
               </div>
 

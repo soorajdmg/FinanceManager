@@ -1,4 +1,4 @@
-/* Sidebar */
+/* Light Mode Sidebar (Default) */
 .sidebar {
     width: 280px;
     position: fixed;
@@ -7,20 +7,20 @@
     background-color: rgb(238, 237, 235);
     backdrop-filter: blur(10px);
     z-index: 1000;
+    transition: all 0.3s ease;
 }
 
 .sidebar-header {
     padding: 2rem 1.5rem;
     border-bottom: 1px solid rgba(148, 163, 184, 0.2);
     background-color: rgb(238, 237, 235);
-
+    transition: all 0.3s ease;
 }
 
 .logo {
     font-size: 1.5rem;
     font-weight: 700;
-    font-family: Gilroy-extrabold;
-    background: linear-gradient(135deg, #60a5fa 0%, #34d399 100%);
+    font-family: Gilroy-extrabold, -apple-system, BlinkMacSystemFont, sans-serif;
     background: rgb(46, 51, 91);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -28,20 +28,21 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    transition: all 0.3s ease;
 }
 
 .nav-menu {
     background-color: rgb(238, 237, 235);
     padding: 1rem 0;
+    transition: all 0.3s ease;
 }
 
 .nav-section {
-    margin-bottom: 10rem;
+    margin-bottom: 2rem;
 }
 
-
 .nav-item {
-    font-family: Gilroy-extrabold;
+    font-family: Gilroy-extrabold, -apple-system, BlinkMacSystemFont, sans-serif;
     display: flex;
     align-items: center;
     padding: 0.875rem 1rem;
@@ -50,7 +51,6 @@
     border-radius: 0.75rem;
     text-decoration: none;
     cursor: pointer;
-    border-left: 3px solid transparent;
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -64,7 +64,6 @@
     height: 100%;
     width: 0;
     border-radius: 0.75rem;
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
     background: linear-gradient(90deg, rgba(93, 134, 177, 0.1) 0%, rgba(103, 130, 159, 0.15) 100%);
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 0;
@@ -81,7 +80,6 @@
 }
 
 .nav-item.active {
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
     background: linear-gradient(90deg, rgba(66, 95, 126, 0.1) 0%, rgba(66, 95, 126, 0.15) 100%);
     border-radius: 0.75rem;
     transform: translateX(4px);
@@ -105,7 +103,44 @@
     z-index: 1;
 }
 
-/* Scrollbar styling */
+/* Dark Mode Sidebar */
+.sidebar.dark {
+    background-color: rgb(17, 24, 39);
+}
+
+.sidebar.dark .sidebar-header {
+    background-color: rgb(17, 24, 39);
+    border-bottom: 1px solid rgba(55, 65, 81, 0.3);
+}
+
+.sidebar.dark .logo {
+    background-color: #eeedeb;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.sidebar.dark .nav-menu {
+    background-color: rgb(17, 24, 39);
+}
+
+.sidebar.dark .nav-item {
+    color: rgba(240, 246, 255, 0.78);
+}
+
+.sidebar.dark .nav-item::before {
+    background: rgba(66, 95, 126, 0.396);
+}
+
+.sidebar.dark .nav-item:hover {
+    background-color: rgba(55, 65, 81, 0.3);
+}
+
+.sidebar.dark .nav-item.active {
+    background: rgba(66, 95, 126, 0.396);
+}
+
+/* Scrollbar styling for light mode */
 .sidebar::-webkit-scrollbar {
     width: 8px;
 }
@@ -121,6 +156,20 @@
 
 .sidebar::-webkit-scrollbar-thumb:hover {
     background: rgba(128, 140, 158, 0.5);
+}
+
+/* Dark mode scrollbar styling */
+.sidebar.dark::-webkit-scrollbar-track {
+    background-color: rgb(31, 41, 55);
+}
+
+.sidebar.dark::-webkit-scrollbar-thumb {
+    background: rgba(107, 114, 128, 0.4);
+    border-radius: 3px;
+}
+
+.sidebar.dark::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.6);
 }
 
 /* Mobile Responsive */

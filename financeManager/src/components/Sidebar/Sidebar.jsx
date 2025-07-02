@@ -4,18 +4,14 @@ import {
   TrendingUp,
   CreditCard,
   DollarSign,
-  ArrowDownLeft,
-  Building2,
-  Link,
+  Clipboard,
   Upload,
-  ClipboardList,
-  FileText,
   User,
   Settings
 } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = ({ activeSection, onNavigate }) => {
+const Sidebar = ({ activeSection, onNavigate, isDarkMode }) => {
   const handleNavClick = (e, sectionId) => {
     e.preventDefault();
     onNavigate(sectionId);
@@ -27,7 +23,7 @@ const Sidebar = ({ activeSection, onNavigate }) => {
         { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
         { id: 'transactions', icon: CreditCard, label: 'Transactions' },
         { id: 'budget', icon: DollarSign, label: 'Budget' },
-        { id: 'expenses', icon: ArrowDownLeft, label: 'Expenses' },
+        { id: 'reports', icon: Clipboard, label: 'Reports' },
         { id: 'upload', icon: Upload, label: 'Document Upload' }
       ]
     },
@@ -40,7 +36,7 @@ const Sidebar = ({ activeSection, onNavigate }) => {
   ];
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isDarkMode ? 'dark' : ''}`}>
       <div className="sidebar-header">
         <div className="logo">Finance Manager</div>
       </div>

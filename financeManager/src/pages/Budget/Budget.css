@@ -1,4 +1,4 @@
-/* Budget Container */
+/* Budget Container - Dark Mode */
 .budget-container {
     min-height: 100vh;
     background-color: rgb(252, 251, 249);
@@ -6,6 +6,10 @@
     transition: all 0.7s ease;
     opacity: 1;
     transform: translateY(0);
+}
+
+.dark-mode .budget-container {
+    background-color: rgb(32, 42, 65);
 }
 
 .budget-container.loaded {
@@ -23,7 +27,7 @@
     margin: 0 auto;
 }
 
-/* Header Section */
+/* Header Section - Dark Mode */
 .budget-header {
     display: flex;
     justify-content: space-between;
@@ -39,14 +43,27 @@
 .budget-title {
     font-size: 2rem;
     font-weight: 700;
-    color: #0f172a;
+    color: #475569;
     margin: 0 0 0.5rem 0;
+}
+
+.dark-mode .budget-title {
+    background: linear-gradient(135deg, rgba(240, 246, 255, 0.9) 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: rgba(240, 246, 255, 0.9);
+    /* Fallback */
 }
 
 .budget-subtitle {
     font-size: 1rem;
     color: #475569;
     margin: 0;
+}
+
+.dark-mode .budget-subtitle {
+    color: rgba(240, 246, 255, 0.6);
 }
 
 .add-budget-btn {
@@ -66,18 +83,24 @@
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
 }
 
+.dark-mode .add-budget-btn {
+    background: #374151;
+    color: rgba(240, 246, 255, 0.9);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
 .add-budget-btn:hover {
     background: #6c7786;
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.2);
 }
 
-.btn-icon {
-    width: 1rem;
-    height: 1rem;
+.dark-mode .add-budget-btn:hover {
+    background: #4b5563;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
-/* Summary Cards */
+/* Summary Cards - Dark Mode */
 .budget-summary-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -99,6 +122,12 @@
     animation: cardFadeIn 0.6s ease forwards;
 }
 
+.dark-mode .summary-card {
+    background: rgb(31, 41, 55);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
 .summary-card:nth-child(1) {
     animation-delay: 0.1s;
 }
@@ -115,6 +144,11 @@
     transform: translateY(-4px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.03);
     border-color: rgba(59, 130, 246, 0.2);
+}
+
+.dark-mode .summary-card:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25), 0 8px 16px rgba(0, 0, 0, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
 }
 
 .summary-card-content {
@@ -143,14 +177,27 @@
     transition: transform 0.2s ease;
 }
 
+.dark-mode .summary-icon {
+    background: rgba(55, 65, 81, 0.5);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+}
+
 .summary-icon svg {
     width: 1.25rem;
     height: 1.25rem;
     color: #64748b;
 }
 
+.dark-mode .summary-icon svg {
+    color: rgba(240, 246, 255, 0.6);
+}
+
 .summary-card:hover .summary-icon {
     transform: scale(1.05) rotate(3deg);
+}
+
+.dark-mode .summary-card:hover .summary-icon {
+    background: rgba(55, 65, 81, 0.7);
 }
 
 .summary-body {
@@ -166,6 +213,10 @@
     margin: 0 0 0.5rem 0;
 }
 
+.dark-mode .summary-title {
+    color: rgba(240, 246, 255, 0.7);
+}
+
 .summary-value {
     font-size: 2.25rem;
     font-family: Gilroy-extrabold, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -175,15 +226,27 @@
     transition: transform 0.3s ease;
 }
 
+.dark-mode .summary-value {
+    color: rgba(240, 246, 255, 0.9);
+}
+
 .summary-value.positive {
     color: #059669;
+}
+
+.dark-mode .summary-value.positive {
+    color: #34d399;
 }
 
 .summary-value.negative {
     color: #dc2626;
 }
 
-/* Budget Categories */
+.dark-mode .summary-value.negative {
+    color: #fca5a5;
+}
+
+/* Budget Categories - Dark Mode */
 .budget-categories {
     animation: fadeInUp 0.6s ease forwards;
     animation-delay: 0.4s;
@@ -196,8 +259,12 @@
 .categories-title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #0f172a;
+    color: #475569;
     margin: 0 0 0.5rem 0;
+}
+
+.dark-mode .categories-title {
+    color: rgba(240, 246, 255, 0.9);
 }
 
 .categories-subtitle {
@@ -206,7 +273,11 @@
     margin: 0;
 }
 
-/* New Category Layout - List Style - MINIMAL HOVER EFFECTS */
+.dark-mode .categories-subtitle {
+    color: rgba(240, 246, 255, 0.6);
+}
+
+/* Category List - Dark Mode */
 .categories-list {
     display: flex;
     flex-direction: column;
@@ -222,16 +293,39 @@
     position: relative;
     overflow: hidden;
     opacity: 1;
-    /* REMOVED: All hover transform and shadow effects */
+    transition: all 0.3s ease;
 }
 
-.budget-category-item:nth-child(1) { animation-delay: 0.1s; }
-.budget-category-item:nth-child(2) { animation-delay: 0.2s; }
-.budget-category-item:nth-child(3) { animation-delay: 0.3s; }
-.budget-category-item:nth-child(4) { animation-delay: 0.4s; }
-.budget-category-item:nth-child(5) { animation-delay: 0.5s; }
+.dark-mode .budget-category-item {
+    background: rgb(31, 41, 55);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(0, 0, 0, 0.05);
+}
 
-/* REMOVED: All hover effects for budget-category-item except action button visibility */
+.budget-category-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.budget-category-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.budget-category-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.budget-category-item:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.budget-category-item:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+.dark-mode .budget-category-item:hover {
+    background: rgba(55, 65, 81, 0.2);
+    border-color: rgba(55, 65, 81, 0.5);
+}
 
 .category-item-header {
     display: flex;
@@ -248,16 +342,29 @@
 }
 
 .category-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    background: #f8fafc;
+    width: 3rem;
+    height: 3rem;
+    background: #eef4fa;
+    color: #64748b;
     border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    border: 1px solid rgba(226, 232, 240, 0.6);
-    /* REMOVED: transition and transform effects */
+    border: 1px solid #e2e8f0;
+}
+
+.dark-mode .category-icon {
+    background: rgba(55, 65, 81, 0.5);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+}
+
+.budget-category-item:hover .category-icon {
+    background: #e2e8f0;
+}
+
+.dark-mode .budget-category-item:hover .category-icon {
+    background: rgba(55, 65, 81, 0.7);
 }
 
 .category-icon svg {
@@ -266,7 +373,9 @@
     color: #64748b;
 }
 
-/* REMOVED: category-icon hover transform effect */
+.dark-mode .category-icon svg {
+    color: rgba(240, 246, 255, 0.6);
+}
 
 .category-info {
     flex: 1;
@@ -274,16 +383,25 @@
 }
 
 .category-name {
-    font-size: 1rem;
-    font-weight: 700;
     color: #0f172a;
     margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #475569;
+}
+
+.dark-mode .category-name {
+    color: rgba(240, 246, 255, 0.9);
 }
 
 .category-budget {
     font-size: 0.875rem;
     color: #64748b;
     margin: 0;
+}
+
+.dark-mode .category-budget {
+    color: rgba(240, 246, 255, 0.6);
 }
 
 .category-item-stats {
@@ -301,11 +419,15 @@
 }
 
 .stat-label {
-    font-size: 0.75rem;
-    color: #64748b;
-    text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.dark-mode .stat-label {
+    color: rgba(240, 246, 255, 0.7);
 }
 
 .stat-value {
@@ -314,7 +436,10 @@
     color: #0f172a;
 }
 
-/* ONLY KEEP ACTION BUTTON HOVER VISIBILITY */
+.dark-mode .stat-value {
+    color: rgba(240, 246, 255, 0.9);
+}
+
 .category-actions {
     display: flex;
     gap: 0.5rem;
@@ -340,10 +465,22 @@
     color: #64748b;
 }
 
+.dark-mode .action-btn {
+    background: rgba(55, 65, 81, 0.5);
+    color: rgba(240, 246, 255, 0.6);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+}
+
 .action-btn:hover {
     background: #f1f5f9;
     color: #475569;
     transform: scale(1.05);
+}
+
+.dark-mode .action-btn:hover {
+    background: rgba(55, 65, 81, 0.7);
+    color: rgba(240, 246, 255, 0.8);
+    border-color: rgba(55, 65, 81, 0.5);
 }
 
 .action-btn svg {
@@ -355,6 +492,10 @@
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid rgba(226, 232, 240, 0.4);
+}
+
+.dark-mode .category-progress-section {
+    border-top: 1px solid rgba(55, 65, 81, 0.3);
 }
 
 .progress-info {
@@ -371,10 +512,18 @@
     letter-spacing: 0.05em;
 }
 
+.dark-mode .progress-label {
+    color: rgba(240, 246, 255, 0.6);
+}
+
 .progress-percentage {
     font-size: 0.75rem;
     font-weight: 600;
     color: #0f172a;
+}
+
+.dark-mode .progress-percentage {
+    color: rgba(240, 246, 255, 0.8);
 }
 
 .progress-bar {
@@ -385,15 +534,23 @@
     position: relative;
 }
 
+.dark-mode .progress-bar {
+    background: rgba(55, 65, 81, 0.5);
+}
+
 .progress-fill {
     height: 100%;
-    background: linear-gradient(135deg, #7d8a9c 0%, #6c7786 100%);
+    background: linear-gradient(135deg, #7d8a9c 0%, #555d6a 100%);
     border-radius: 0.25rem;
     transition: width 0.8s ease;
     position: relative;
 }
 
-/* Alternative Compact Category Layout */
+.dark-mode .progress-fill {
+    background: linear-gradient(135deg, #f0f6ff6b 0%, #f0f6ff6b 100%);
+}
+
+/* Compact Category Layout - Dark Mode */
 .categories-compact {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -411,10 +568,21 @@
     overflow: hidden;
 }
 
+.dark-mode .budget-category-compact {
+    background: rgb(31, 41, 55);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
 .budget-category-compact:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03);
     border-color: rgba(125, 138, 156, 0.3);
+}
+
+.dark-mode .budget-category-compact:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.1);
+    border-color: rgba(59, 130, 246, 0.4);
 }
 
 .compact-header {
@@ -441,10 +609,19 @@
     border: 1px solid rgba(226, 232, 240, 0.6);
 }
 
+.dark-mode .compact-icon {
+    background: rgba(55, 65, 81, 0.5);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+}
+
 .compact-icon svg {
     width: 1rem;
     height: 1rem;
     color: #64748b;
+}
+
+.dark-mode .compact-icon svg {
+    color: rgba(240, 246, 255, 0.6);
 }
 
 .compact-info h3 {
@@ -452,6 +629,10 @@
     font-weight: 600;
     color: #0f172a;
     margin: 0;
+}
+
+.dark-mode .compact-info h3 {
+    color: rgba(240, 246, 255, 0.9);
 }
 
 .compact-amounts {
@@ -466,9 +647,17 @@
     color: #64748b;
 }
 
+.dark-mode .compact-spent {
+    color: rgba(240, 246, 255, 0.6);
+}
+
 .compact-budget {
     color: #0f172a;
     font-weight: 600;
+}
+
+.dark-mode .compact-budget {
+    color: rgba(240, 246, 255, 0.9);
 }
 
 .compact-progress {
@@ -478,6 +667,10 @@
     overflow: hidden;
 }
 
+.dark-mode .compact-progress {
+    background: rgba(55, 65, 81, 0.5);
+}
+
 .compact-progress-fill {
     height: 100%;
     background: linear-gradient(135deg, #7d8a9c 0%, #6c7786 100%);
@@ -485,7 +678,11 @@
     transition: width 0.8s ease;
 }
 
-/* Modal Styles */
+.dark-mode .compact-progress-fill {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+/* Modal Styles - Dark Mode */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -500,6 +697,10 @@
     animation: fadeIn 0.3s ease;
 }
 
+.dark-mode .modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
 .modal-content {
     background: #ffffff;
     border-radius: 1.5rem;
@@ -510,6 +711,12 @@
     overflow-y: auto;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     animation: slideIn 0.3s ease;
+}
+
+.dark-mode .modal-content {
+    background: rgb(31, 41, 55);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
 }
 
 .modal-header {
@@ -526,6 +733,10 @@
     margin: 0;
 }
 
+.dark-mode .modal-title {
+    color: rgba(240, 246, 255, 0.9);
+}
+
 .modal-close {
     width: 2rem;
     height: 2rem;
@@ -540,9 +751,20 @@
     color: #64748b;
 }
 
+.dark-mode .modal-close {
+    background: rgba(55, 65, 81, 0.5);
+    color: rgba(240, 246, 255, 0.6);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+}
+
 .modal-close:hover {
     background: #e2e8f0;
     color: #475569;
+}
+
+.dark-mode .modal-close:hover {
+    background: rgba(55, 65, 81, 0.7);
+    color: rgba(240, 246, 255, 0.8);
 }
 
 .modal-close svg {
@@ -550,7 +772,7 @@
     height: 1rem;
 }
 
-/* Form Styles */
+/* Form Styles - Dark Mode */
 .modal-form {
     display: flex;
     flex-direction: column;
@@ -570,6 +792,10 @@
     margin-bottom: 0.25rem;
 }
 
+.dark-mode .form-label {
+    color: rgba(240, 246, 255, 0.8);
+}
+
 .form-input,
 .form-select {
     padding: 0.75rem 1rem;
@@ -581,6 +807,13 @@
     color: #111827;
 }
 
+.dark-mode .form-input,
+.dark-mode .form-select {
+    background: rgb(17, 24, 39);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    color: rgba(240, 246, 255, 0.9);
+}
+
 .form-input:focus,
 .form-select:focus {
     outline: none;
@@ -588,8 +821,18 @@
     box-shadow: 0 0 0 3px rgba(125, 138, 156, 0.1);
 }
 
+.dark-mode .form-input:focus,
+.dark-mode .form-select:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
 .form-input::placeholder {
     color: #9ca3af;
+}
+
+.dark-mode .form-input::placeholder {
+    color: rgba(240, 246, 255, 0.4);
 }
 
 .form-actions {
@@ -615,9 +858,18 @@
     color: white;
 }
 
+.dark-mode .btn-primary {
+    background: #374151;
+    color: rgba(240, 246, 255, 0.9);
+}
+
 .btn-primary:hover {
     background: #6c7786;
     transform: translateY(-1px);
+}
+
+.dark-mode .btn-primary:hover {
+    background: #4b5563;
 }
 
 .btn-secondary {
@@ -626,71 +878,39 @@
     border: 1px solid #e2e8f0;
 }
 
+.dark-mode .btn-secondary {
+    background: rgba(55, 65, 81, 0.5);
+    color: rgba(240, 246, 255, 0.7);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+}
+
 .btn-secondary:hover {
     background: #f1f5f9;
     color: #475569;
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+.dark-mode .btn-secondary:hover {
+    background: rgba(55, 65, 81, 0.7);
+    color: #f0f6ffe6;
 }
 
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+/* Enhanced Dark Mode Gradient Overlays */
+.dark-mode .summary-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgb(31, 41, 55) 100%);
+    color: #f0f6ffe6;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    border-radius: 1.5rem;
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.dark-mode .summary-card:hover::before {
+    opacity: 1;
 }
 
-@keyframes cardFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes categorySlideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-/* Progress bar animation enhancement - REMOVED hover effects */
+/* Progress bar shimmer animation - Dark Mode */
 .progress-fill {
     position: relative;
     overflow: hidden;
@@ -707,6 +927,10 @@
     animation: shimmer 2s infinite;
 }
 
+.dark-mode .progress-fill::after {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.3), transparent);
+}
+
 @keyframes shimmer {
     0% {
         left: -100%;
@@ -717,10 +941,7 @@
     }
 }
 
-/* REMOVED: All hover effect enhancements for budget-category-item */
-/* REMOVED: ::before pseudo-element hover effects for budget-category-item */
-
-/* Keep summary card hover effects */
+/* Keep original light mode hover effects for summary cards */
 .summary-card::before {
     content: '';
     position: absolute;
@@ -735,7 +956,7 @@
     opacity: 1;
 }
 
-/* Add subtle entrance animation for the entire component */
+/* Container entrance animation */
 .budget-container {
     animation: containerFadeIn 0.8s ease forwards;
 }
