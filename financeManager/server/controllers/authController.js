@@ -140,6 +140,24 @@ const login = async (req, res) => {
   }
 };
 
+// Logout user
+const logout = async (req, res) => {
+  try {
+    // Since we're using JWT tokens, we don't need to do anything server-side
+    // The client should remove the token from their storage
+    res.status(200).json({
+      success: true,
+      message: 'Logged out successfully'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 // Get current user profile
 const getProfile = async (req, res) => {
   try {
@@ -283,6 +301,7 @@ const changePassword = async (req, res) => {
 module.exports = {
   register,
   login,
+  logout,
   getProfile,
   updateProfile,
   changePassword

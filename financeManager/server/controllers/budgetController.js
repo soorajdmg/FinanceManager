@@ -1,4 +1,4 @@
-const Budget = require('../models/Budget');
+const Budget = require('../models/budgetModel');
 const mongoose = require('mongoose');
 
 // Create a new budget
