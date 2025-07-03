@@ -1,4 +1,7 @@
 const { cleanupFile } = require('../middleware/uploadMiddleware');
+const fs = require('fs');
+const path = require('path');
+const pdf = require('pdf-parse');
 
 // Bank patterns for identification
 const bankPatterns = {
@@ -35,255 +38,466 @@ const extractDateRange = (text) => {
     /from\s+(\d{1,2}\s+\w+\s+\d{4})\s+to\s+(\d{1,2}\s+\w+\s+\d{4})/i,
     /(\d{1,2}\/\d{1,2}\/\d{4})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{4})/i,
     /(\d{1,2}-\d{1,2}-\d{4})\s+to\s+(\d{1,2}-\d{1,2}-\d{4})/i,
-    // More flexible patterns
-    /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s*[-–—to]+\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i
+    /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s*[-–—to]+\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+    // New pattern for your format
+    /(\d{1,2}\s+\w{3}\s+\d{4})\s+to\s+(\d{1,2}\s+\w{3}\s+\d{4})/i
   ];
 
   for (const pattern of dateRangePatterns) {
     const match = text.match(pattern);
     if (match) {
       return {
-        startDate: match[1],
-        endDate: match[2]
+        from: match[1],
+        to: match[2]
       };
     }
-  }
-
-  // Try to extract individual dates
-  const datePattern = /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/g;
-  const dates = text.match(datePattern);
-  if (dates && dates.length >= 2) {
-    return {
-      startDate: dates[0],
-      endDate: dates[dates.length - 1]
-    };
   }
 
   return null;
 };
 
-// Helper function to extract reference number from description
-const extractRefNumber = (description) => {
-  const refPatterns = [
-    /(\d{12,})/,  // Long numbers (12+ digits)
-    /\/(\d{10,})\//,  // Numbers between slashes
-    /(\d{10,})/,  // Any 10+ digit number
+// Helper function to clean and normalize text
+const cleanText = (text) => {
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/\n/g, ' ')
+    .replace(/\t/g, ' ')
+    .trim();
+};
+
+// Helper function to parse amount
+const parseAmount = (amountStr) => {
+  if (!amountStr) return 0;
+
+  // Remove commas and handle decimal points
+  const cleanAmount = amountStr.replace(/,/g, '').replace(/[^\d.-]/g, '');
+  const amount = parseFloat(cleanAmount);
+
+  return isNaN(amount) ? 0 : amount;
+};
+
+// Helper function to detect transaction type with SBI-specific patterns
+const detectTransactionType = (description) => {
+  const debitKeywords = [
+    'TO TRANSFER', 'DEBIT', 'WITHDRAW', 'PAYMENT', 'PURCHASE',
+    'ATM', 'CHARGE', 'FEE', 'CHEQUE', 'CASH WITHDRAWAL',
+    'ONLINE TRANSFER', 'NEFT', 'RTGS', 'IMPS', 'UPI',
+    '/DR/', 'UPI/DR', 'TRANSFER-UPI', 'POS'
   ];
 
-  for (const pattern of refPatterns) {
-    const match = description.match(pattern);
-    if (match) {
-      return match[1];
+  const creditKeywords = [
+    'BY TRANSFER', 'CREDIT', 'DEPOSIT', 'SALARY', 'INTEREST',
+    'REFUND', 'CASHBACK', 'BONUS', 'DIVIDEND', 'RECEIVED',
+    '/CR/', 'UPI/CR', 'TRANSFER-UPI/CR'
+  ];
+
+  const upperDesc = description.toUpperCase();
+
+  // Check for explicit debit indicators
+  for (const keyword of debitKeywords) {
+    if (upperDesc.includes(keyword)) {
+      return 'debit';
     }
   }
 
-  return '';
-};
-
-// Improved function to parse SBI bank statement format
-const parseSBITransaction = (line) => {
-  try {
-    // Remove extra whitespace and normalize
-    const normalizedLine = line.replace(/\s+/g, ' ').trim();
-    
-    // SBI format: Date Date Description RefNo Amount Balance
-    // Example: "1 Jul 2025 1 Jul 2025 TO TRANSFER-UPI/DR/518219314628/Jar/YESB/JARRETAIL@/Collect-TRANSFER TO 4897692162094 30.00 6,795.89"
-    
-    // Match the pattern: Date Date Description RefNo Amount Balance
-    const sbiPattern = /^(\d{1,2}\s+\w{3}\s+\d{4})\s+(\d{1,2}\s+\w{3}\s+\d{4})\s+(.+?)\s+(\d{13,})\s+(\d+(?:\.\d{2})?)\s+(\d+(?:,\d{3})*(?:\.\d{2})?)$/;
-    
-    const match = normalizedLine.match(sbiPattern);
-    if (!match) {
-      console.log('No match for line:', normalizedLine);
-      return null;
+  // Check for explicit credit indicators
+  for (const keyword of creditKeywords) {
+    if (upperDesc.includes(keyword)) {
+      return 'credit';
     }
-
-    const [, txnDate, valueDate, description, refNo, amount, balance] = match;
-    
-    // Determine if it's debit or credit based on description
-    const isDebit = description.includes('TO TRANSFER') || description.includes('/DR/');
-    const isCredit = description.includes('BY TRANSFER') || description.includes('/CR/');
-    
-    const parsedAmount = parseFloat(amount);
-    
-    return {
-      txnDate: txnDate.trim(),
-      valueDate: valueDate.trim(),
-      description: description.trim().replace(/\s+/g, ' '),
-      refNo: refNo,
-      debit: isDebit ? amount : '',
-      credit: isCredit ? amount : '',
-      balance: balance.replace(/,/g, ''),
-      amount: isDebit ? -parsedAmount : parsedAmount,
-      type: isDebit ? 'debit' : 'credit'
-    };
-
-  } catch (err) {
-    console.log('Error parsing SBI transaction line:', err);
-    return null;
   }
+
+  // SBI-specific patterns
+  if (upperDesc.includes('UPI/DR') || upperDesc.includes('TO TRANSFER-UPI')) {
+    return 'debit';
+  }
+
+  if (upperDesc.includes('UPI/CR') || upperDesc.includes('BY TRANSFER-UPI')) {
+    return 'credit';
+  }
+
+  // If description ends with '-' it's usually a debit in SBI
+  if (upperDesc.endsWith('-')) {
+    return 'debit';
+  }
+
+  // Default to debit for 'TO TRANSFER' transactions
+  if (upperDesc.includes('TO TRANSFER')) {
+    return 'debit';
+  }
+
+  return 'unknown';
 };
 
-// Enhanced transaction parsing with improved SBI support
-const parseTransactionData = (text) => {
-  console.log('Parsing transaction data from text');
-  console.log('Text length:', text.length);
+// Improved function to reconstruct transaction lines for SBI format
+const reconstructTransactionLines = (text) => {
+  console.log('Reconstructing transaction lines for SBI format...');
 
-  const transactions = [];
-  
-  // Look for the transaction table header
-  const headerPatterns = [
-    'Txn Date Value\nDate \nDescription Ref No./Cheque\nNo. \nDebit Credit Balance',
-    'Txn Date Value Date Description Ref No./Cheque No. Debit Credit Balance',
-    'Txn Date   Value   Description   Ref No./Cheque   Debit   Credit',
-    'Transaction Date   Value Date   Description   Reference   Debit   Credit   Balance'
-  ];
-  
-  let transactionSectionStart = -1;
-  
-  for (const header of headerPatterns) {
-    const headerIndex = text.indexOf(header);
-    if (headerIndex !== -1) {
-      transactionSectionStart = headerIndex + header.length;
-      console.log('Found transaction header at index:', headerIndex);
+  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  const reconstructedLines = [];
+
+  let currentTransaction = '';
+  let foundTransactionStart = false;
+  let transactionStartIndex = -1;
+
+  // Find the start of transaction data (after headers)
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.includes('DebitCreditBalance') ||
+      (line.includes('Debit') && line.includes('Credit') && line.includes('Balance'))) {
+      transactionStartIndex = i + 1;
+      console.log(`Found transaction start at line ${i + 1}`);
       break;
     }
   }
-  
-  if (transactionSectionStart === -1) {
-    // Try to find transaction data by looking for date patterns
-    const datePatternIndex = text.search(/\d{1,2}\s+\w{3}\s+\d{4}\s+\d{1,2}\s+\w{3}\s+\d{4}/);
-    if (datePatternIndex !== -1) {
-      transactionSectionStart = datePatternIndex;
-      console.log('Found transaction data at index:', datePatternIndex);
-    }
+
+  if (transactionStartIndex === -1) {
+    console.log('No transaction header found, using fallback detection');
+    transactionStartIndex = 0;
   }
-  
-  if (transactionSectionStart !== -1) {
-    const transactionText = text.substring(transactionSectionStart);
-    console.log('Transaction section found, parsing...');
-    console.log('First 500 chars of transaction section:', transactionText.substring(0, 500));
-    
-    // Split by lines and process each potential transaction line
-    const lines = transactionText.split('\n');
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      
-      // Skip empty lines and non-transaction lines
-      if (trimmedLine.length < 20) continue;
-      
-      // Check if line starts with a date pattern
-      if (!/^\d{1,2}\s+\w{3}\s+\d{4}/.test(trimmedLine)) continue;
-      
-      console.log('Processing transaction line:', trimmedLine);
-      
-      // Try SBI-specific parsing first
-      let transaction = parseSBITransaction(trimmedLine);
-      
-      // If SBI parsing fails, try generic parsing
-      if (!transaction) {
-        transaction = parseGenericTransaction(trimmedLine);
+
+  for (let i = transactionStartIndex; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Check if this line starts a new transaction (starts with date pattern)
+    const dateMatch = line.match(/^(\d{1,2}\s+\w{3}\s+\d{4})/);
+
+    if (dateMatch) {
+      // If we have a previous transaction, save it
+      if (currentTransaction && foundTransactionStart) {
+        reconstructedLines.push(currentTransaction.trim());
+        console.log(`Completed transaction: "${currentTransaction.trim()}"`);
       }
-      
-      if (transaction) {
-        transactions.push(transaction);
-        console.log('Successfully parsed transaction:', transaction);
-      } else {
-        console.log('Failed to parse line:', trimmedLine);
-      }
+
+      // Start new transaction
+      currentTransaction = line;
+      foundTransactionStart = true;
+      console.log(`Started new transaction: "${line}"`);
+    } else if (foundTransactionStart) {
+      // Continue building current transaction
+      currentTransaction += ' ' + line;
+      console.log(`Added to transaction: "${line}"`);
     }
-  }
-  
-  // Fallback: Try to extract transactions using regex patterns
-  if (transactions.length === 0) {
-    console.log('Trying regex-based parsing...');
-    
-    // Pattern for SBI format: Date Date Description RefNo Amount Balance
-    const sbiRegex = /(\d{1,2}\s+\w{3}\s+\d{4})\s+(\d{1,2}\s+\w{3}\s+\d{4})\s+(.+?)\s+(\d{13,})\s+(\d+(?:\.\d{2})?)\s+(\d+(?:,\d{3})*(?:\.\d{2})?)/g;
-    
-    let match;
-    while ((match = sbiRegex.exec(text)) !== null) {
-      const [, txnDate, valueDate, description, refNo, amount, balance] = match;
-      
-      const isDebit = description.includes('TO TRANSFER') || description.includes('/DR/');
-      const isCredit = description.includes('BY TRANSFER') || description.includes('/CR/');
-      const parsedAmount = parseFloat(amount);
-      
-      const transaction = {
-        txnDate: txnDate.trim(),
-        valueDate: valueDate.trim(),
-        description: description.trim().replace(/\s+/g, ' '),
-        refNo: refNo,
-        debit: isDebit ? amount : '',
-        credit: isCredit ? amount : '',
-        balance: balance.replace(/,/g, ''),
-        amount: isDebit ? -parsedAmount : parsedAmount,
-        type: isDebit ? 'debit' : 'credit'
-      };
-      
-      transactions.push(transaction);
-      console.log('Regex parsed transaction:', transaction);
+
+    // Check if current line ends with a balance (number pattern)
+    const balanceMatch = line.match(/(\d+(?:,\d{3})*(?:\.\d{2})?)\s*$/);
+    if (balanceMatch && currentTransaction && foundTransactionStart) {
+      reconstructedLines.push(currentTransaction.trim());
+      console.log(`Completed transaction with balance: "${currentTransaction.trim()}"`);
+      currentTransaction = '';
+      foundTransactionStart = false;
     }
   }
 
-  console.log('Total parsed transactions:', transactions.length);
+  // Add last transaction if exists
+  if (currentTransaction && foundTransactionStart) {
+    reconstructedLines.push(currentTransaction.trim());
+    console.log(`Added final transaction: "${currentTransaction.trim()}"`);
+  }
+
+  console.log(`Reconstructed ${reconstructedLines.length} transaction lines`);
+  reconstructedLines.forEach((line, index) => {
+    console.log(`Reconstructed line ${index + 1}: "${line}"`);
+  });
+
+  return reconstructedLines;
+};
+
+// Enhanced SBI transaction parser with better pattern matching
+// Enhanced SBI transaction parser with better pattern matching
+const parseSBITransaction = (line) => {
+  try {
+    const cleanLine = cleanText(line);
+    console.log(`Parsing SBI line: "${cleanLine}"`);
+
+    // Handle the concatenated date format: "1 Jul 20251 Jul 2025"
+    // Updated pattern to match concatenated dates
+    const datePattern = /^(\d{1,2}\s+\w{3}\s+\d{4})(\d{1,2}\s+\w{3}\s+\d{4})\s*(.+)/;
+    const dateMatch = cleanLine.match(datePattern);
+
+    if (!dateMatch) {
+      console.log('No date pattern found, trying alternative patterns...');
+
+      // Try alternative pattern for normal format
+      const altDatePattern = /^(\d{1,2}\s+\w{3}\s+\d{4})\s+(\d{1,2}\s+\w{3}\s+\d{4})\s+(.+)/;
+      const altMatch = cleanLine.match(altDatePattern);
+
+      if (!altMatch) {
+        console.log('No alternative date pattern found');
+        return null;
+      }
+
+      const [, txnDate, valueDate, remainingText] = altMatch;
+      return parseTransactionDetails(txnDate, valueDate, remainingText);
+    }
+
+    const [, txnDate, valueDate, remainingText] = dateMatch;
+    console.log(`Extracted dates: txnDate="${txnDate}", valueDate="${valueDate}"`);
+    console.log(`Remaining text: "${remainingText}"`);
+
+    return parseTransactionDetails(txnDate, valueDate, remainingText);
+
+  } catch (err) {
+    console.error('Error parsing SBI transaction:', err);
+    return null;
+  }
+};
+
+// Helper function to parse transaction details
+const parseTransactionDetails = (txnDate, valueDate, remainingText) => {
+  try {
+    // Extract balance (last number in the line)
+    const balancePattern = /(\d+(?:,\d{3})*(?:\.\d{2})?)\s*$/;
+    const balanceMatch = remainingText.match(balancePattern);
+
+    if (!balanceMatch) {
+      console.log('No balance found, treating as incomplete transaction');
+      return {
+        date: txnDate.trim(),
+        txnDate: txnDate.trim(),
+        valueDate: valueDate.trim(),
+        description: remainingText.trim(),
+        refNo: '',
+        amount: 0,
+        balance: 0,
+        type: 'unknown',
+        debit: '',
+        credit: ''
+      };
+    }
+
+    const balance = balanceMatch[1];
+    const beforeBalance = remainingText.substring(0, balanceMatch.index).trim();
+    console.log(`Extracted balance: "${balance}"`);
+    console.log(`Text before balance: "${beforeBalance}"`);
+
+    // Try to extract amount (second to last number)
+    const amountPattern = /(\d+(?:,\d{3})*(?:\.\d{2})?)\s+\d+(?:,\d{3})*(?:\.\d{2})?\s*$/;
+    const amountMatch = remainingText.match(amountPattern);
+
+    let amount = '0';
+    let description = beforeBalance;
+
+    if (amountMatch) {
+      amount = amountMatch[1];
+      description = remainingText.substring(0, amountMatch.index).trim();
+      console.log(`Extracted amount: "${amount}"`);
+      console.log(`Final description: "${description}"`);
+    } else {
+      // If no amount found, try to extract from description
+      // Sometimes amount might be embedded in the description
+      const descAmountPattern = /(\d+(?:,\d{3})*(?:\.\d{2})?)/;
+      const descAmountMatch = description.match(descAmountPattern);
+      if (descAmountMatch) {
+        amount = descAmountMatch[1];
+        console.log(`Extracted amount from description: "${amount}"`);
+      }
+    }
+
+    // Determine transaction type
+    const txnType = detectTransactionType(description);
+    const parsedAmount = parseAmount(amount);
+
+    // Extract reference number from description
+    const refNoMatch = description.match(/(\d{12,})/);
+    const refNo = refNoMatch ? refNoMatch[1] : '';
+
+    const transaction = {
+      date: txnDate.trim(),
+      txnDate: txnDate.trim(),
+      valueDate: valueDate.trim(),
+      description: description.trim(),
+      refNo: refNo,
+      amount: txnType === 'debit' ? -parsedAmount : parsedAmount,
+      balance: parseAmount(balance),
+      type: txnType,
+      debit: txnType === 'debit' ? amount : '',
+      credit: txnType === 'credit' ? amount : ''
+    };
+
+    console.log('Successfully parsed transaction:', transaction);
+    return transaction;
+
+  } catch (err) {
+    console.error('Error parsing transaction details:', err);
+    return null;
+  }
+};
+
+// Alternative parser for SBI format with better reconstruction
+const parseSBITransactionAlternative = (line) => {
+  try {
+    const cleanLine = cleanText(line);
+    console.log(`Alternative parsing SBI line: "${cleanLine}"`);
+
+    // Split by spaces and look for date patterns
+    const parts = cleanLine.split(/\s+/);
+    let txnDate = '', valueDate = '', description = '', balance = '0', amount = '0';
+
+    // Look for date patterns in the first few parts
+    for (let i = 0; i < Math.min(parts.length, 6); i++) {
+      const part = parts[i];
+      if (/^\d{1,2}$/.test(part) && i + 2 < parts.length) {
+        // Check if next two parts form a date
+        const month = parts[i + 1];
+        const year = parts[i + 2];
+
+        if (/^[A-Za-z]{3}$/.test(month) && /^\d{4}$/.test(year)) {
+          if (!txnDate) {
+            txnDate = `${part} ${month} ${year}`;
+          } else if (!valueDate) {
+            valueDate = `${part} ${month} ${year}`;
+            // Everything after this is description
+            description = parts.slice(i + 3).join(' ');
+            break;
+          }
+        }
+      }
+    }
+
+    if (!txnDate || !valueDate) {
+      console.log('Could not extract both dates from line');
+      return null;
+    }
+
+    console.log(`Extracted: txnDate="${txnDate}", valueDate="${valueDate}", description="${description}"`);
+
+    // Extract balance (last number)
+    const balanceMatch = description.match(/(\d+(?:,\d{3})*(?:\.\d{2})?)\s*$/);
+    if (balanceMatch) {
+      balance = balanceMatch[1];
+      description = description.substring(0, balanceMatch.index).trim();
+    }
+
+    // Extract amount (second to last number)
+    const amountMatch = description.match(/(\d+(?:,\d{3})*(?:\.\d{2})?)\s*$/);
+    if (amountMatch) {
+      amount = amountMatch[1];
+      description = description.substring(0, amountMatch.index).trim();
+    }
+
+    const txnType = detectTransactionType(description);
+    const parsedAmount = parseAmount(amount);
+
+    const transaction = {
+      date: txnDate,
+      txnDate: txnDate,
+      valueDate: valueDate,
+      description: description.trim(),
+      refNo: '',
+      amount: txnType === 'debit' ? -parsedAmount : parsedAmount,
+      balance: parseAmount(balance),
+      type: txnType,
+      debit: txnType === 'debit' ? amount : '',
+      credit: txnType === 'credit' ? amount : ''
+    };
+
+    console.log('Successfully parsed with alternative method:', transaction);
+    return transaction;
+
+  } catch (err) {
+    console.error('Error in alternative parsing:', err);
+    return null;
+  }
+};
+
+// Updated parseTransactionData function
+const parseTransactionData = (text) => {
+  console.log('Starting enhanced transaction parsing...');
+
+  const transactions = [];
+
+  // First, try to reconstruct complete transaction lines
+  const reconstructedLines = reconstructTransactionLines(text);
+
+  if (reconstructedLines.length > 0) {
+    console.log('Processing reconstructed lines...');
+
+    for (const line of reconstructedLines) {
+      console.log(`Processing reconstructed line: "${line}"`);
+
+      // Try main parser first
+      let transaction = parseSBITransaction(line);
+
+      // If main parser fails, try alternative parser
+      if (!transaction) {
+        console.log('Main parser failed, trying alternative parser...');
+        transaction = parseSBITransactionAlternative(line);
+      }
+
+      if (transaction) {
+        transactions.push(transaction);
+        console.log(`Successfully parsed transaction: ${JSON.stringify(transaction)}`);
+      } else {
+        console.log(`Failed to parse line: "${line}"`);
+
+        // Even if parsing fails, try to extract basic info
+        const basicTransaction = extractBasicTransactionInfo(line);
+        if (basicTransaction) {
+          transactions.push(basicTransaction);
+        }
+      }
+    }
+  }
+
+  console.log(`Total transactions parsed: ${transactions.length}`);
   return transactions;
 };
 
-// Generic transaction parser as fallback
-const parseGenericTransaction = (line) => {
+// Helper function to extract basic transaction info when parsing fails
+const extractBasicTransactionInfo = (line) => {
   try {
-    // Try to match: Date Description Amount Balance
-    const patterns = [
-      // Pattern 1: Date Date Description Amount Balance
-      /^(\d{1,2}\s+\w{3}\s+\d{4})\s+(\d{1,2}\s+\w{3}\s+\d{4})\s+(.+?)\s+(\d+(?:\.\d{2})?)\s+(\d+(?:,\d{3})*(?:\.\d{2})?)$/,
-      // Pattern 2: Date Description Amount Balance
-      /^(\d{1,2}\s+\w{3}\s+\d{4})\s+(.+?)\s+(\d+(?:\.\d{2})?)\s+(\d+(?:,\d{3})*(?:\.\d{2})?)$/
-    ];
-    
-    for (let i = 0; i < patterns.length; i++) {
-      const match = line.match(patterns[i]);
-      if (match) {
-        let transaction = {};
-        
-        if (i === 0) {
-          // Pattern 1: Date Date Description Amount Balance
-          const [, txnDate, valueDate, description, amount, balance] = match;
-          transaction = {
-            txnDate: txnDate.trim(),
-            valueDate: valueDate.trim(),
-            description: description.trim(),
-            amount: parseFloat(amount),
-            balance: balance.replace(/,/g, ''),
-            refNo: extractRefNumber(description),
-            type: 'unknown',
-            debit: '',
-            credit: ''
-          };
-        } else {
-          // Pattern 2: Date Description Amount Balance
-          const [, txnDate, description, amount, balance] = match;
-          transaction = {
-            txnDate: txnDate.trim(),
-            valueDate: txnDate.trim(),
-            description: description.trim(),
-            amount: parseFloat(amount),
-            balance: balance.replace(/,/g, ''),
-            refNo: extractRefNumber(description),
-            type: 'unknown',
-            debit: '',
-            credit: ''
-          };
-        }
-        
-        return transaction;
-      }
+    const cleanLine = cleanText(line);
+
+    // Try to extract any dates
+    const dateMatches = cleanLine.match(/\d{1,2}\s+\w{3}\s+\d{4}/g);
+    if (!dateMatches || dateMatches.length < 1) {
+      return null;
     }
-    
-    return null;
+
+    const txnDate = dateMatches[0];
+    const valueDate = dateMatches[1] || dateMatches[0];
+
+    // Extract all numbers
+    const numberMatches = cleanLine.match(/\d+(?:,\d{3})*(?:\.\d{2})?/g);
+    const balance = numberMatches && numberMatches.length > 0 ? numberMatches[numberMatches.length - 1] : '0';
+    const amount = numberMatches && numberMatches.length > 1 ? numberMatches[numberMatches.length - 2] : '0';
+
+    // Extract description (everything between dates and numbers)
+    let description = cleanLine;
+    dateMatches.forEach(date => {
+      description = description.replace(date, '');
+    });
+
+    if (numberMatches) {
+      numberMatches.forEach(num => {
+        description = description.replace(num, '');
+      });
+    }
+
+    description = description.trim().replace(/\s+/g, ' ');
+
+    const txnType = detectTransactionType(description);
+    const parsedAmount = parseAmount(amount);
+
+    const transaction = {
+      date: txnDate,
+      txnDate: txnDate,
+      valueDate: valueDate,
+      description: description,
+      refNo: '',
+      amount: txnType === 'debit' ? -parsedAmount : parsedAmount,
+      balance: parseAmount(balance),
+      type: txnType,
+      debit: txnType === 'debit' ? amount : '',
+      credit: txnType === 'credit' ? amount : ''
+    };
+
+    console.log('Extracted basic transaction info:', transaction);
+    return transaction;
+
   } catch (err) {
-    console.log('Error in generic transaction parsing:', err);
+    console.error('Error extracting basic transaction info:', err);
     return null;
   }
 };
@@ -325,10 +539,13 @@ const extractAccountInfo = (text) => {
     }
   }
 
-  // Branch information
+  // Branch and IFSC patterns
   const branchPatterns = [
     /Branch\s*:\s*([a-zA-Z\s-]+)/i,
-    /branch[:\s]+([a-zA-Z\s-]+)/i,
+    /branch[:\s]+([a-zA-Z\s-]+)/i
+  ];
+
+  const ifscPatterns = [
     /IFS\s+Code\s*:\s*([A-Z]{4}[0-9]{7})/i,
     /ifsc[:\s]+([A-Z]{4}[0-9]{7})/i
   ];
@@ -336,25 +553,15 @@ const extractAccountInfo = (text) => {
   for (const pattern of branchPatterns) {
     const match = text.match(pattern);
     if (match) {
-      if (pattern.source.includes('IFS') || pattern.source.includes('ifsc')) {
-        accountInfo.ifscCode = match[1];
-      } else {
-        accountInfo.branchName = match[1].trim();
-      }
+      accountInfo.branchName = match[1].trim();
+      break;
     }
   }
 
-  // Balance information
-  const balancePatterns = [
-    /Balance\s+as\s+on\s+[^:]+:\s*([\d,]+\.?\d*)/i,
-    /opening\s+balance[:\s]+([\d,]+\.?\d*)/i,
-    /closing\s+balance[:\s]+([\d,]+\.?\d*)/i
-  ];
-
-  for (const pattern of balancePatterns) {
+  for (const pattern of ifscPatterns) {
     const match = text.match(pattern);
     if (match) {
-      accountInfo.openingBalance = match[1].replace(/,/g, '');
+      accountInfo.ifscCode = match[1];
       break;
     }
   }
@@ -362,8 +569,134 @@ const extractAccountInfo = (text) => {
   return accountInfo;
 };
 
-// Process extracted text data (called from frontend)
+// MAIN FUNCTION: Upload and process bank statement
+const uploadBankStatement = async (req, res) => {
+  console.log('=== BANK STATEMENT UPLOAD STARTED ===');
+
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded. Please select a PDF file.'
+      });
+    }
+
+    console.log('File uploaded:', {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      size: req.file.size,
+      path: req.file.path
+    });
+
+    // Extract text from PDF
+    const filePath = req.file.path;
+    const fileBuffer = fs.readFileSync(filePath);
+
+    console.log('Extracting text from PDF...');
+    const pdfData = await pdf(fileBuffer);
+    const extractedText = pdfData.text;
+
+    console.log('PDF text extracted successfully');
+    console.log('Text length:', extractedText.length);
+    console.log('First 1000 characters:', extractedText.substring(0, 1000));
+    console.log('Last 500 characters:', extractedText.substring(extractedText.length - 500));
+
+    // Clean up the uploaded file
+    cleanupFile(filePath);
+
+    // Process the extracted text
+    const bankName = detectBankFromText(extractedText);
+    console.log('Detected bank:', bankName);
+
+    const dateRange = extractDateRange(extractedText);
+    console.log('Date range:', dateRange);
+
+    const accountInfo = extractAccountInfo(extractedText);
+    console.log('Account info:', accountInfo);
+
+    const transactions = parseTransactionData(extractedText);
+    console.log('Parsed transactions:', transactions.length);
+
+    // More detailed debugging if no transactions found
+    if (transactions.length === 0) {
+      console.log('=== DEBUGGING: No transactions found ===');
+      console.log('Extracted text lines:');
+      const lines = extractedText.split('\n');
+      lines.forEach((line, index) => {
+        if (line.trim()) {
+          console.log(`Line ${index}: "${line}"`);
+        }
+      });
+
+      return res.status(400).json({
+        success: false,
+        message: 'No transactions found in the PDF. The PDF text extraction might be incomplete or the format is not recognized.',
+        debug: {
+          textLength: extractedText.length,
+          totalLines: lines.length,
+          bankName,
+          dateRange,
+          accountInfo,
+          sampleLines: lines.slice(0, 20).map((line, i) => `${i}: ${line}`)
+        }
+      });
+    }
+
+    // Prepare response data
+    const processedData = {
+      bankName,
+      dateRange,
+      transactions,
+      transactionsFound: transactions.length,
+      accountInfo: {
+        bankName,
+        ...accountInfo,
+        fileName: req.file.originalname,
+        processedAt: new Date().toISOString(),
+        totalTransactions: transactions.length,
+        statementPeriod: dateRange
+      }
+    };
+
+    console.log('=== PROCESSING COMPLETED SUCCESSFULLY ===');
+    console.log('Final result:', {
+      bankName,
+      transactionsFound: transactions.length,
+      accountInfo: processedData.accountInfo
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Bank statement processed successfully',
+      data: processedData
+    });
+
+  } catch (error) {
+    console.error('=== ERROR PROCESSING BANK STATEMENT ===');
+    console.error('Error details:', error);
+
+    // Clean up file if error occurs
+    if (req.file && req.file.path) {
+      try {
+        cleanupFile(req.file.path);
+      } catch (cleanupError) {
+        console.error('Error cleaning up file:', cleanupError);
+      }
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error processing bank statement',
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
+// Process extracted text (kept for compatibility)
 const processExtractedText = async (req, res) => {
+  console.log('=== PROCESS EXTRACTED TEXT CALLED ===');
+
   try {
     const { extractedText, fileName } = req.body;
     const userId = req.user.id;
@@ -376,28 +709,16 @@ const processExtractedText = async (req, res) => {
     }
 
     console.log('Processing extracted text, length:', extractedText.length);
-    console.log('First 1000 characters:', extractedText.substring(0, 1000));
 
-    // Detect bank
     const bankName = detectBankFromText(extractedText);
-    console.log('Detected bank:', bankName);
-
-    // Extract date range
     const dateRange = extractDateRange(extractedText);
-    console.log('Date range:', dateRange);
-
-    // Parse transactions using improved logic
     const transactions = parseTransactionData(extractedText);
-    console.log('Parsed transactions count:', transactions.length);
-
-    // Extract account info
     const accountInfo = extractAccountInfo(extractedText);
-    console.log('Account info:', accountInfo);
 
     if (transactions.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'No transactions found in the extracted text. The PDF might not contain transaction data in a recognizable format.',
+        message: 'No transactions found in the extracted text.',
         debug: {
           textLength: extractedText.length,
           textPreview: extractedText.substring(0, 1000),
@@ -408,19 +729,19 @@ const processExtractedText = async (req, res) => {
       });
     }
 
-    // Prepare response data
     const processedData = {
       bankName,
       dateRange,
       transactions,
       transactionsFound: transactions.length,
       accountInfo: {
+        bankName,
         ...accountInfo,
         fileName: fileName || 'unknown',
         processedAt: new Date().toISOString(),
-        totalTransactions: transactions.length
-      },
-      extractedText: extractedText.substring(0, 1000) + '...' // Truncated for response
+        totalTransactions: transactions.length,
+        statementPeriod: dateRange
+      }
     };
 
     res.status(200).json({
@@ -428,7 +749,6 @@ const processExtractedText = async (req, res) => {
       message: 'Bank statement processed successfully',
       data: processedData
     });
-    console.log('Processed data sent successfully:', processedData);
 
   } catch (error) {
     console.error('Error processing extracted text:', error);
@@ -440,43 +760,7 @@ const processExtractedText = async (req, res) => {
   }
 };
 
-// Rest of the functions remain the same...
-const uploadBankStatement = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'No file uploaded. Please select a PDF file.'
-      });
-    }
-
-    cleanupFile(req.file.path);
-
-    res.status(200).json({
-      success: true,
-      message: 'File uploaded successfully. Please process on the frontend.',
-      data: {
-        fileName: req.file.originalname,
-        fileSize: req.file.size,
-        uploadedAt: new Date().toISOString()
-      }
-    });
-
-  } catch (error) {
-    console.error('Error uploading bank statement:', error);
-
-    if (req.file && req.file.path) {
-      cleanupFile(req.file.path);
-    }
-
-    res.status(500).json({
-      success: false,
-      message: 'Error uploading bank statement',
-      error: error.message
-    });
-  }
-};
-
+// Import transactions
 const importTransactions = async (req, res) => {
   try {
     const { transactions, bankInfo } = req.body;

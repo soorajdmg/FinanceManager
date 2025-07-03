@@ -109,6 +109,7 @@ const App = () => {
   const location = useLocation();
   const { isAuthenticated, user, login, logout, loading } = useAuth();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [importedTransactions, setImportedTransactions] = useState([]);
 
   // Apply dark mode class to document body when isDarkMode changes
   useEffect(() => {
@@ -122,6 +123,13 @@ const App = () => {
   // Simple dark mode toggle function
   const handleDarkModeChange = (newDarkMode) => {
     setIsDarkMode(newDarkMode);
+  };
+
+  // Handle transactions imported from DocumentUpload
+  const handleTransactionsImported = (transactions) => {
+    setImportedTransactions(prev => [...prev, ...transactions]);
+    // Navigate to transactions page after import
+    navigate('/transactions');
   };
 
   // Get active section from current pathname
@@ -229,7 +237,7 @@ const App = () => {
               activeSection={getActiveSection()}
               onNavigate={handleNavigation}
             >
-              <Transactions />
+              <Transactions importedTransactions={importedTransactions} />
             </PrivateLayout>
           </ProtectedRoute>
         }
@@ -277,7 +285,7 @@ const App = () => {
               activeSection={getActiveSection()}
               onNavigate={handleNavigation}
             >
-              <DocumentUpload />
+              <DocumentUpload onTransactionsImported={handleTransactionsImported} />
             </PrivateLayout>
           </ProtectedRoute>
         }
