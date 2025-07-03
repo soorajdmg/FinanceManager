@@ -9,7 +9,6 @@ import {
     Eye,
     Loader2
 } from 'lucide-react';
-import StatementProcessor from '../../statementProcessor';
 import './DocumentUpload.css';
 
 const DocumentUpload = () => {
@@ -17,10 +16,14 @@ const DocumentUpload = () => {
     const [isDragOver, setIsDragOver] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState('');
-    const [showProcessor, setShowProcessor] = useState(false);
+    const [processedData, setProcessedData] = useState(null);
+    const [showResults, setShowResults] = useState(false);
+    const [importingTransactions, setImportingTransactions] = useState(false);
     const fileInputRef = useRef(null);
 
-    // Updated to focus on PDF files for bank statements
+    // API Base URL - Safe way to access environment variables
+    const API_BASE_URL = window.env?.REACT_APP_API_URL || 'http://localhost:5000/api';
+
     const acceptedTypes = [
         'application/pdf'
     ];
@@ -105,11 +108,18 @@ const DocumentUpload = () => {
     const removeFile = (fileId) => {
         setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
         setUploadError('');
-        
-        // Hide processor if no files left
+
+        // Hide results if no files left
         if (uploadedFiles.length === 1) {
-            setShowProcessor(false);
+            setShowResults(false);
+            setProcessedData(null);
         }
+    };
+
+    // Function to get authentication token (adjust based on your auth implementation)
+    const getAuthToken = () => {
+        // Replace this with your actual token retrieval logic
+        return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
     };
 
     const handleSubmit = async () => {
@@ -122,24 +132,90 @@ const DocumentUpload = () => {
         setUploadError('');
 
         try {
-            // Simulate upload validation process
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Process each file (for now, we'll handle one at a time)
+            const file = uploadedFiles[0];
 
-            // Update file statuses to completed
+            // Create FormData to send file to backend
+            const formData = new FormData();
+            formData.append('bankStatement', file.file);
+
+            const token = getAuthToken();
+
+            const response = await fetch(`${API_BASE_URL}/upload/bank-statement`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+            console.log('Upload result:', result);
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Upload failed');
+            }
+
+            // Update file status to completed
             setUploadedFiles(prev =>
-                prev.map(file => ({ ...file, status: 'completed' }))
+                prev.map(fileData => ({ ...fileData, status: 'completed' }))
             );
 
-            // Show the processor component
-            setShowProcessor(true);
+            // Store processed data
+            setProcessedData(result.data);
+            setShowResults(true);
 
-            console.log('Files ready for processing:', uploadedFiles);
+            console.log('Bank statement processed successfully:', result);
 
         } catch (error) {
-            setUploadError('Upload failed. Please try again.');
+            setUploadError(error.message || 'Upload failed. Please try again.');
             console.error('Upload error:', error);
         } finally {
             setIsUploading(false);
+        }
+    };
+
+    const handleImportTransactions = async () => {
+        if (!processedData || !processedData.transactions) {
+            setUploadError('No transaction data available to import');
+            return;
+        }
+
+        setImportingTransactions(true);
+        setUploadError('');
+
+        try {
+            const token = getAuthToken();
+
+            const response = await fetch(`${API_BASE_URL}/upload/import-transactions`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    transactions: processedData.transactions
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Import failed');
+            }
+
+            alert(`Successfully imported ${result.data.importedTransactions.length} transactions!`);
+
+            // Reset the component state
+            setUploadedFiles([]);
+            setProcessedData(null);
+            setShowResults(false);
+
+        } catch (error) {
+            setUploadError(error.message || 'Import failed. Please try again.');
+            console.error('Import error:', error);
+        } finally {
+            setImportingTransactions(false);
         }
     };
 
@@ -147,8 +223,30 @@ const DocumentUpload = () => {
         fileInputRef.current?.click();
     };
 
-    // If processor is shown, render it instead of upload interface
-    if (showProcessor) {
+    const downloadCSV = () => {
+        if (!processedData || !processedData.transactions) return;
+
+        const csvContent = [
+            ['Date', 'Description', 'Amount', 'Type'],
+            ...processedData.transactions.map(txn => [
+                txn.date,
+                txn.description,
+                txn.amount,
+                txn.type
+            ])
+        ].map(row => row.join(',')).join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bank-statement-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+
+    // If results are shown, render them
+    if (showResults && processedData) {
         return (
             <div className="upload-container">
                 <div className="upload-padding">
@@ -156,22 +254,16 @@ const DocumentUpload = () => {
                         {/* Header */}
                         <div className="upload-header">
                             <div className="header-content">
-                                <h1 className="upload-title">Processing Bank Statement</h1>
+                                <h1 className="upload-title">Bank Statement Processed</h1>
                                 <p className="upload-subtitle">
-                                    Your PDF is being processed and converted to CSV format
+                                    Successfully extracted {processedData.transactionsFound} transactions from your bank statement
                                 </p>
-                                <button 
+                                <button
+                                    className='back-button'
                                     onClick={() => {
-                                        setShowProcessor(false);
+                                        setShowResults(false);
                                         setUploadedFiles([]);
-                                    }}
-                                    style={{
-                                        marginTop: '10px',
-                                        padding: '8px 16px',
-                                        backgroundColor: '#f5f5f5',
-                                        border: '1px solid #ddd',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer'
+                                        setProcessedData(null);
                                     }}
                                 >
                                     ← Back to Upload
@@ -179,8 +271,102 @@ const DocumentUpload = () => {
                             </div>
                         </div>
 
-                        {/* CSV Processor Component */}
-                        <StatementProcessor uploadedFiles={uploadedFiles} />
+                        {/* Results Section */}
+                        <div className="upload-card">
+                            {/* Account Information */}
+                            {processedData.accountInfo && Object.keys(processedData.accountInfo).length > 0 && (
+                                <div className="account-info">
+                                    <h3>Account Information</h3>
+                                    <div className="account-details">
+                                        {processedData.accountInfo.bankName && (
+                                            <p><strong>Bank:</strong> {processedData.accountInfo.bankName}</p>
+                                        )}
+                                        {processedData.accountInfo.accountNumber && (
+                                            <p><strong>Account Number:</strong> {processedData.accountInfo.accountNumber}</p>
+                                        )}
+                                        {processedData.accountInfo.statementPeriod && (
+                                            <p><strong>Statement Period:</strong> {processedData.accountInfo.statementPeriod.from} to {processedData.accountInfo.statementPeriod.to}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Transactions Preview */}
+                            <div className="transactions-preview">
+                                <h3>Transactions ({processedData.transactionsFound || 0})</h3>
+                                <div className="results-table">
+                                    <table className='transaction-table'>
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Type</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {processedData.transactions && Array.isArray(processedData.transactions) ? (
+                                                processedData.transactions.map((txn, index) => (
+                                                    <tr key={index}>
+                                                        <td>{txn.date}</td>
+                                                        <td>{txn.description}</td>
+                                                        <td>
+                                                            {txn.amount >= 0 ? '+' : ''}{txn.amount.toFixed(2)}
+                                                        </td>
+                                                        <td>
+                                                            <span>
+                                                                {txn.type}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="4">
+                                                        No transactions found
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="action-buttons">
+                                <button
+                                    className="action-button primary"
+                                    onClick={downloadCSV}
+                                >
+                                    Download CSV
+                                </button>
+
+                                <button
+                                    className="action-button success"
+                                    onClick={handleImportTransactions}
+                                    disabled={importingTransactions}
+                                >
+                                    {importingTransactions ? (
+                                        <>
+                                            <Loader2 size={16} className="spinning" />
+                                            Importing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Import Transactions
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Error Message */}
+                            {uploadError && (
+                                <div className="error-message">
+                                    <AlertCircle size={16} />
+                                    {uploadError}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -196,7 +382,7 @@ const DocumentUpload = () => {
                         <div className="header-content">
                             <h1 className="upload-title">Upload Bank Statement</h1>
                             <p className="upload-subtitle">
-                                Upload your PDF bank statement files to convert them to CSV format automatically
+                                Upload your PDF bank statement files to extract transaction data automatically
                             </p>
                         </div>
                     </div>
@@ -254,7 +440,6 @@ const DocumentUpload = () => {
                                         <div
                                             key={fileData.id}
                                             className="file-item"
-                                            style={{ animationDelay: `${index * 100}ms` }}
                                         >
                                             <div className="file-info">
                                                 <div className="file-icon">
@@ -303,7 +488,7 @@ const DocumentUpload = () => {
                                     </>
                                 ) : (
                                     <>
-                                        Process PDF to CSV
+                                        Process file
                                     </>
                                 )}
                             </button>
@@ -334,8 +519,8 @@ const DocumentUpload = () => {
                                     <Download className="icon" />
                                 </div>
                                 <div className="info-content">
-                                    <h4>PDF to CSV Conversion</h4>
-                                    <p>Automatically extract transaction data from PDF statements into CSV format</p>
+                                    <h4>Transaction Extraction</h4>
+                                    <p>Automatically extract transaction data from PDF statements</p>
                                 </div>
                             </div>
 
@@ -344,8 +529,8 @@ const DocumentUpload = () => {
                                     <CheckCircle className="icon" />
                                 </div>
                                 <div className="info-content">
-                                    <h4>Instant Download</h4>
-                                    <p>Get your processed CSV file downloaded automatically after conversion</p>
+                                    <h4>Import to Account</h4>
+                                    <p>Review and import extracted transactions directly to your account</p>
                                 </div>
                             </div>
                         </div>
