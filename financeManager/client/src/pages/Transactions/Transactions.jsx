@@ -24,120 +24,9 @@ const Transaction = () => {
     const [sortOrder, setSortOrder] = useState('desc');
     const [filterType, setFilterType] = useState('all');
     const [showFilters, setShowFilters] = useState(false);
-
-    // Sample transaction data
-    const transactionsData = [
-        {
-            id: 1,
-            type: 'sent',
-            name: 'John Doe',
-            description: 'Dinner split payment',
-            date: '2024-06-27',
-            time: '14:32',
-            amount: 125.50,
-            category: 'food',
-            status: 'completed'
-        },
-        {
-            id: 2,
-            type: 'received',
-            name: 'Sarah Wilson',
-            description: 'Freelance project payment',
-            date: '2024-06-26',
-            time: '09:15',
-            amount: 850.00,
-            category: 'work',
-            status: 'completed'
-        },
-        {
-            id: 3,
-            type: 'sent',
-            name: 'Amazon',
-            description: 'Online shopping purchase',
-            date: '2024-06-25',
-            time: '16:45',
-            amount: 89.99,
-            category: 'shopping',
-            status: 'completed'
-        },
-        {
-            id: 4,
-            type: 'received',
-            name: 'David Miller',
-            description: 'Refund for concert tickets',
-            date: '2024-06-24',
-            time: '11:28',
-            amount: 200.00,
-            category: 'entertainment',
-            status: 'completed'
-        },
-        {
-            id: 5,
-            type: 'sent',
-            name: 'Uber',
-            description: 'Ride to airport',
-            date: '2024-06-23',
-            time: '07:20',
-            amount: 45.75,
-            category: 'transport',
-            status: 'completed'
-        },
-        {
-            id: 6,
-            type: 'received',
-            name: 'Mom',
-            description: 'Birthday gift money',
-            date: '2024-06-22',
-            time: '12:00',
-            amount: 500.00,
-            category: 'personal',
-            status: 'completed'
-        },
-        {
-            id: 7,
-            type: 'sent',
-            name: 'Netflix',
-            description: 'Monthly subscription',
-            date: '2024-06-21',
-            time: '08:30',
-            amount: 15.99,
-            category: 'entertainment',
-            status: 'completed'
-        },
-        {
-            id: 8,
-            type: 'sent',
-            name: 'Starbucks',
-            description: 'Coffee and pastry',
-            date: '2024-06-20',
-            time: '15:45',
-            amount: 12.50,
-            category: 'food',
-            status: 'completed'
-        },
-        {
-            id: 9,
-            type: 'received',
-            name: 'Tom Anderson',
-            description: 'Loan repayment',
-            date: '2024-06-19',
-            time: '13:10',
-            amount: 300.00,
-            category: 'personal',
-            status: 'completed'
-        },
-        {
-            id: 10,
-            type: 'sent',
-            name: 'Rent Payment',
-            description: 'Monthly rent for apartment',
-            date: '2024-06-18',
-            time: '10:00',
-            amount: 1200.00,
-            category: 'housing',
-            status: 'completed'
-        }
-    ];
+    
+    // Static transactions data (you can replace this with your preferred data source)
+    const transactionsData = [];
 
     const getCategoryIcon = (category) => {
         const icons = {
@@ -212,7 +101,7 @@ const Transaction = () => {
         });
 
         return filtered;
-    }, [searchTerm, sortBy, sortOrder, filterType]);
+    }, [searchTerm, sortBy, sortOrder, filterType, transactionsData]);
 
     const totalSent = transactionsData
         .filter(t => t.type === 'sent')
@@ -298,13 +187,12 @@ const Transaction = () => {
                             </div>
                         </div>
                     )}
-
                     {/* Transactions List */}
                     <div className="transactions-card">
                         <div className="transactions-list">
                             {filteredAndSortedTransactions.length === 0 ? (
                                 <div className="no-transactions">
-                                    <p>No transactions found matching your criteria.</p>
+                                    <p>No transactions found. Add transactions to get started.</p>
                                 </div>
                             ) : (
                                 filteredAndSortedTransactions.map((transaction, index) => {

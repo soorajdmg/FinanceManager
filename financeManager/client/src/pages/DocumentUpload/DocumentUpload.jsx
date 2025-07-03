@@ -175,6 +175,37 @@ const DocumentUpload = () => {
         }
     };
 
+    const categorizeTransaction = (description) => {
+        const desc = description.toLowerCase();
+
+        if (desc.includes('salary') || desc.includes('payroll') || desc.includes('wage')) {
+            return 'work';
+        }
+        if (desc.includes('rent') || desc.includes('mortgage') || desc.includes('utilities')) {
+            return 'housing';
+        }
+        if (desc.includes('grocery') || desc.includes('restaurant') || desc.includes('food') || desc.includes('dining')) {
+            return 'food';
+        }
+        if (desc.includes('uber') || desc.includes('taxi') || desc.includes('transport') || desc.includes('gas') || desc.includes('fuel')) {
+            return 'transport';
+        }
+        if (desc.includes('amazon') || desc.includes('shopping') || desc.includes('store') || desc.includes('retail')) {
+            return 'shopping';
+        }
+        if (desc.includes('netflix') || desc.includes('spotify') || desc.includes('movie') || desc.includes('entertainment')) {
+            return 'entertainment';
+        }
+        if (desc.includes('hospital') || desc.includes('doctor') || desc.includes('pharmacy') || desc.includes('medical')) {
+            return 'health';
+        }
+        if (desc.includes('flight') || desc.includes('hotel') || desc.includes('travel') || desc.includes('vacation')) {
+            return 'travel';
+        }
+
+        return 'personal';
+    };
+
     const handleImportTransactions = async () => {
         if (!processedData || !processedData.transactions) {
             setUploadError('No transaction data available to import');
@@ -199,6 +230,7 @@ const DocumentUpload = () => {
             });
 
             const result = await response.json();
+            console.log('Import result:', result);
 
             if (!response.ok) {
                 throw new Error(result.message || 'Import failed');
