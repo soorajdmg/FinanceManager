@@ -19,29 +19,47 @@ import Settings from './pages/Settings/Settings.jsx';
 
 import './App.css';
 
-// Auth Context Hook (simple implementation)
+// Auth Context Hook (improved implementation)
 const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     // Check for token in localStorage on app startup
     const token = localStorage.getItem('authToken');
-    setIsAuthenticated(!!token);
+    const userData = localStorage.getItem('user');
+    
+    if (token) {
+      setIsAuthenticated(true);
+      if (userData) {
+        try {
+          setUser(JSON.parse(userData));
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+    }
     setLoading(false);
   }, []);
 
-  const login = (token) => {
+  const login = (token, userData = null) => {
     localStorage.setItem('authToken', token);
+    if (userData) {
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+    }
     setIsAuthenticated(true);
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
     setIsAuthenticated(false);
+    setUser(null);
   };
 
-  return { isAuthenticated, login, logout };
+  return { isAuthenticated, user, login, logout, loading };
 };
 
 // Protected Route Component
@@ -89,7 +107,7 @@ const PrivateLayout = ({ children, isDarkMode, onDarkModeChange, activeSection, 
 const App = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loading, login, logout } = useAuth();
+  const { isAuthenticated, user, login, logout, loading } = useAuth();
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Apply dark mode class to document body when isDarkMode changes
@@ -153,8 +171,9 @@ const App = () => {
   };
 
   // Handle authentication success (login or signup)
-  const handleAuthSuccess = (token) => {
-    login(token);
+  const handleAuthSuccess = (token, userData = null) => {
+    console.log('Authentication successful, redirecting to dashboard...');
+    login(token, userData);
     navigate('/dashboard');
   };
 

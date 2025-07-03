@@ -297,7 +297,7 @@ body {
   animation-delay: 0.3s;
   opacity: 0;
   transform: translateX(30px);
-  transition: all 0.3s ease; 
+  transition: all 0.3s ease;
 }
 
 @keyframes slideInRight {
@@ -327,9 +327,39 @@ body {
   margin: 0;
 }
 
+.message-box {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.error-message {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.success-message {
+  background-color: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+.submit-button.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 /* Progressive Steps Indicator */
 .steps-indicator {
-  display: none; /* Hidden for login, shown for signup */
+  display: none;
+  /* Hidden for login, shown for signup */
   margin-bottom: 2rem;
 }
 
@@ -437,6 +467,7 @@ body {
     opacity: 0;
     transform: translateX(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -448,6 +479,7 @@ body {
     opacity: 1;
     transform: translateX(0);
   }
+
   to {
     opacity: 0;
     transform: translateX(-20px);
@@ -735,7 +767,8 @@ body {
   text-decoration: underline;
 }
 
-.submit-button, .btn {
+.submit-button,
+.btn {
   padding: 0.875rem 1.5rem;
   background: #64748b;
   color: white;
@@ -763,16 +796,19 @@ body {
   box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
 }
 
-.submit-button:hover, .btn:hover {
+.submit-button:hover,
+.btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 16px #64748b55;
 }
 
-.submit-button:active, .btn:active {
+.submit-button:active,
+.btn:active {
   transform: translateY(0);
 }
 
-.submit-button:disabled, .btn:disabled {
+.submit-button:disabled,
+.btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
@@ -926,9 +962,11 @@ body {
   0% {
     transform: scale(0);
   }
+
   50% {
     transform: scale(1.1);
   }
+
   100% {
     transform: scale(1);
   }
