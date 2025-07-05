@@ -45,9 +45,27 @@ const transactionSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  recipient: {
+    type: String,
+    trim: true,
+    maxlength: 100
+  },
+  recipientBank: {
+    type: String,
+    trim: true,
+    maxlength: 10,
+    uppercase: true
+  },
+  refNo: {
+    type: String,
+    trim: true
+  },
+  balance: {
+    type: Number
   }
 }, {
-  timestamps: false, // Using custom createdAt
+  timestamps: false,
   collection: 'transactions'
 });
 
