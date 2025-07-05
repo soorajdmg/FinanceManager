@@ -1,20 +1,106 @@
 const { cleanupFile } = require('../middleware/uploadMiddleware');
+const { createTransaction } = require('../controllers/txnController');
+const Transaction = require('../models/txnModel');
 const fs = require('fs');
 const path = require('path');
 const pdf = require('pdf-parse');
+const axios = require('axios');
 
 // Bank patterns for identification
 const bankPatterns = {
   'SBI': ['SBIN', 'STATE BANK', 'SBI', 'SBIN0006399'],
-  'HDFC': ['HDFC', 'HDFC BANK'],
-  'ICICI': ['ICICI', 'ICIC'],
-  'AXIS': ['AXIS', 'UTIB'],
-  'KOTAK': ['KOTAK', 'KKBK'],
+  'HDFC Bank': ['HDFC', 'HDFC BANK'],
+  'ICICI Bank': ['ICICI', 'ICIC'],
+  'Federal Bank': ['FEDERAL', 'FDRL'],
+  'Axis Bank': ['AXIS', 'UTIB'],
+  'Kotak Bank': ['KOTAK', 'KKBK'],
   'PNB': ['PUNJAB NATIONAL', 'PNB', 'PUNB'],
-  'BOB': ['BANK OF BARODA', 'BOB', 'BARB'],
-  'CANARA': ['CANARA', 'CNRB'],
-  'UNION': ['UNION BANK', 'UBIN'],
-  'YES': ['YES BANK', 'YESB']
+  'Bank of Baroda': ['BANK OF BARODA', 'BOB', 'BARB'],
+  'Canara Bank': ['CANARA', 'CNRB'],
+  'Union Bank': ['UNION BANK', 'UBIN'],
+  'Yes Bank': ['YES BANK', 'YESB', 'YE SB']
+};
+
+// Category mapping based on merchant/recipient names
+const categoryPatterns = {
+  'Shopping': ['Kattoor', 'Amazon', 'Flipkart', 'Myntra', 'More', 'Vmmart', 'Vm mart', 'Lulu', 'Adidas', 'Marginfr', 'Myg', 'Reliance', 'Trends', 'Zudio'],
+  'Food': ['De cake', 'Brufia', 'kfc', 'Utsav', 'Thomson', 'Al baike', 'Thaza fa', 'King foo', 'M S KOTT', 'NORTH EX'],
+  'Fuel': ['petrol', 'Shekhar ', 'Sekhar f', 'Kuttanad', 'Hpcl', 'Jaya fuels', 'Mohan fu', 'Olaketty', 'MS PETRO'],
+  'Movie': ['Bookmyshow', 'Ganam'],
+  'Recharge': ['Jio'],
+  'Pappa': ['Murugara', 'MURU GARA'],
+  'College': ['Cusat', 'Abin', 'M c', 'Abhinav  a', 'Cucek', 'Aashin m', 'Sajumon', 'Mrs  san', 'Santhosh'],
+  'Withdrawal': ['Atm'],
+  'Travel': ['Indian r', 'Irctc', 'Abhibus', 'Ixigo'],
+  'Investment': ['PHONEP E', 'JAR', 'SAFE GOLD']
+};
+
+// Helper function to extract recipient/payer and bank from UPI transaction
+const extractUPIDetails = (description) => {
+  const upperDesc = description.toUpperCase();
+
+  // Pattern 1: TO TRANSFER- UPI/DR/769299123210/VM MART/SBIN/HSBIMOPAD./Pay men- TRANSFER TO 4897694162092
+  const upiPattern1 = /UPI\/[DC]R\/\d+\/([^\/]+)\/([A-Z]{2,4})\s*([A-Z]{2})\//i;
+  const match1 = upperDesc.match(upiPattern1);
+
+  if (match1) {
+    return {
+      recipient: match1[1].trim(),
+      bank: detectBankFromText(match1[2].trim() + match1[3].trim())  // This will map "SBIN" to "SBI"
+    };
+  }
+
+  // Pattern 2: TO TRANSFER-MARGIN MONEY SOORAJ- TRANSFER TO 37608337103
+  const transferPattern = /TO TRANSFER-([^-]+)-/i;
+  const match2 = upperDesc.match(transferPattern);
+
+  if (match2) {
+    return {
+      recipient: match2[1].trim(),
+      bank: null
+    };
+  }
+
+  // Pattern 3: BY TRANSFER (for credits)
+  const byTransferPattern = /BY TRANSFER[^A-Z]*([A-Z\s]+)/i;
+  const match3 = upperDesc.match(byTransferPattern);
+
+  if (match3) {
+    return {
+      recipient: match3[1].trim(),
+      bank: null
+    };
+  }
+
+  return {
+    recipient: null,
+    bank: null
+  };
+};
+
+// Helper function to categorize transaction based on recipient
+const categorizeTransaction = (recipient, description) => {
+  if (!recipient) {
+    // Fallback categorization based on description keywords
+    const upperDesc = description.toUpperCase();
+
+    if (upperDesc.includes('ATM')) return 'Withdrawal';
+    if (upperDesc.includes('SALARY') || upperDesc.includes('INTEREST')) return 'Income';
+    if (upperDesc.includes('CHARGE') || upperDesc.includes('FEE')) return 'Bank Charges';
+
+    return 'Personal';
+  }
+
+  const upperRecipient = recipient.toUpperCase();
+
+  // Check each category
+  for (const [category, patterns] of Object.entries(categoryPatterns)) {
+    if (patterns.some(pattern => upperRecipient.includes(pattern.toUpperCase()))) {
+      return category;
+    }
+  }
+
+  return 'Personal';
 };
 
 // Helper function to detect bank from text
@@ -25,7 +111,7 @@ const detectBankFromText = (text) => {
       return bankName;
     }
   }
-  return 'UNKNOWN';
+  return text;
 };
 
 // Helper function to extract date range
@@ -453,6 +539,12 @@ const parseSingleTransaction = (txnDate, valueDate, transactionText) => {
     const refNoMatch = description.match(refNoPattern);
     const refNo = refNoMatch ? refNoMatch[1] : '';
 
+    // Extract UPI details
+    const upiDetails = extractUPIDetails(description);
+
+    // Determine category
+    const category = categorizeTransaction(upiDetails.recipient, description);
+
     // Clean up description by removing extra spaces
     description = description.replace(/\s+/g, ' ').trim();
 
@@ -468,7 +560,10 @@ const parseSingleTransaction = (txnDate, valueDate, transactionText) => {
       debit: txnType === 'debit' ? amount : '',
       credit: txnType === 'credit' ? amount : '',
       rawAmount: amount,
-      rawBalance: balance
+      rawBalance: balance,
+      recipient: upiDetails.recipient,
+      recipientBank: upiDetails.bank,
+      category: category
     };
 
     console.log('Successfully parsed single transaction:', transaction);
@@ -851,11 +946,16 @@ const processExtractedText = async (req, res) => {
   }
 };
 
-// Import transactions
 const importTransactions = async (req, res) => {
+  console.log('=== IMPORT TRANSACTIONS STARTED ===');
   try {
     const { transactions, bankInfo } = req.body;
     const userId = req.user.id;
+
+    console.log('=== IMPORT TRANSACTIONS DEBUG ===');
+    console.log('UserId:', userId);
+    console.log('Transactions count:', transactions?.length);
+    console.log('BankInfo:', bankInfo);
 
     if (!transactions || !Array.isArray(transactions)) {
       return res.status(400).json({
@@ -864,28 +964,66 @@ const importTransactions = async (req, res) => {
       });
     }
 
-    const processedTransactions = transactions.map(txn => ({
-      ...txn,
-      userId: userId,
-      source: 'bank_statement',
-      bankName: bankInfo?.bankName || 'Unknown',
-      fileName: bankInfo?.accountInfo?.fileName || 'Unknown',
-      createdAt: new Date().toISOString(),
-      date: txn.txnDate || txn.date,
-      amount: typeof txn.amount === 'number' ? txn.amount :
-        (txn.debit ? -parseFloat(txn.debit) : parseFloat(txn.credit || 0))
-    }));
+    const savedTransactions = [];
+    const errors = [];
+
+    for (let i = 0; i < transactions.length; i++) {
+      const txn = transactions[i];
+      console.log(`\n--- Processing transaction ${i + 1} ---`);
+      console.log('Original transaction:', txn);
+
+      try {
+        const transactionData = {
+          userId: userId,
+          amount: Math.abs(typeof txn.amount === 'number' ? txn.amount :
+            (txn.debit ? parseFloat(txn.debit) : parseFloat(txn.credit || 0))),
+          type: txn.type === 'debit' ? 'debit' : 'credit',
+          category: txn.category || 'Personal', // Use extracted category
+          description: txn.description || '',
+          transactionDate: new Date(txn.txnDate || txn.date),
+          valueDate: new Date(txn.valueDate || txn.txnDate || txn.date),
+          source: 'bank_statement',
+          bankName: bankInfo?.bankName || 'Unknown',
+          refNo: txn.refNo || '',
+          balance: txn.balance || 0,
+          // New fields
+          recipient: txn.recipient || null,
+          recipientBank: txn.recipientBank || null
+        };
+
+        console.log('Processed transaction data:', transactionData);
+
+        // Direct database save instead of using controller
+        const savedTransaction = await Transaction.create(transactionData);
+
+        console.log('Successfully saved transaction:', savedTransaction._id);
+        savedTransactions.push(savedTransaction);
+
+      } catch (error) {
+        console.error('Error saving transaction:', error);
+        errors.push({
+          transaction: txn.description,
+          error: error.message
+        });
+      }
+    }
+
+    console.log('\n=== IMPORT SUMMARY ===');
+    console.log('Saved transactions:', savedTransactions.length);
+    console.log('Errors:', errors.length);
 
     res.status(200).json({
       success: true,
-      message: `${processedTransactions.length} transactions imported successfully`,
+      message: `${savedTransactions.length} transactions imported successfully`,
       data: {
-        importedTransactions: processedTransactions,
+        importedTransactions: savedTransactions,
+        errors: errors,
         bankInfo: bankInfo,
         summary: {
-          totalTransactions: processedTransactions.length,
-          totalDebits: processedTransactions.filter(t => t.amount < 0).length,
-          totalCredits: processedTransactions.filter(t => t.amount > 0).length,
+          totalTransactions: savedTransactions.length,
+          totalErrors: errors.length,
+          totalDebits: savedTransactions.filter(t => t.type === 'debit').length,
+          totalCredits: savedTransactions.filter(t => t.type === 'credit').length,
           dateRange: bankInfo?.dateRange
         }
       }
