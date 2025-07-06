@@ -44,7 +44,7 @@ const createTransaction = async (req, res) => {
 // @access  Private
 const getTransactions = async (req, res) => {
   try {
-    const { page = 1, limit = 10, type, category, startDate, endDate } = req.query;
+    const { page = 1, limit = 1000, type, category, startDate, endDate } = req.query;
     
     // Build filter object
     const filter = { userId: req.user.id };
