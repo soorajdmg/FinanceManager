@@ -9,8 +9,9 @@ const axios = require('axios');
 // Recipient name standardization mapping
 const recipientNameMapping = {
   'Pappa': ['MURU GARA', 'MURUGARA', 'MURUGAR', 'MURU GAR'],
-  'Jar Gold': ['JAR'],
   'ATM Withdrawal': ['SBI ATM WDL', 'ATM WDL', 'SBI ATM', 'ATM WITHDRAWAL', 'ATM', 'atm', 'Atm'],
+  'Jar Gold': ['JAR'],
+  'Tinkerhub': ['TINKERHUB TECHNO', 'TINKERHUB', 'TINKER HUB'],
   'Eva Beauty': ['EVA BEAU'],
   'Panda Supermarket': ['PANDA SU'],
   'Kattoor Supermaret': ['Katto Or'],
@@ -23,7 +24,7 @@ const recipientNameMapping = {
   'Brufia Bakers': ['BRUFI A B'],
   'Newland Bakery': ['NEWLA ND'],
   'A2B Adyar': ['Adyar An'],
-  'Swiggy': ['Swigg Y', 'Swiggy Ltd', 'Swiggy L'],
+  'Swiggy': ['Swigg Y', 'Swiggy Ltd', 'Swiggy L', 'Swiggy'],
   'KFC': ['kfc', 'KFC', 'K F C'],
   'Chicking': ['Chickin G'],
   'MS Kottayam': ['M S KOTT', 'MS KOTT', 'MSKOTT'],
@@ -52,9 +53,10 @@ const recipientNameMapping = {
   'Manu': ['MANU'],
   'Margin Money': ['MARGIN ETL', 'MARGIN'],
   'PhonePe': ['PHONEP E', 'PHONE PE', 'PHONEPE'],
+  'UPI Lite': ['UPILIT E', 'UPILIT', 'UPI LITE'],
   'SafeGold': ['SAFE GOLD', 'SAFEGOLD', 'SAFE-GOLD'],
   'Adidas': ['ADIDA S I'],
-  'Amazon': ['AMAZON PAY*', 'AMAZON PAY', 'AMAZON.IN', 'AMZN', 'AMAZON RETAIL', 'Amazo N I'],
+  'Amazon': ['AMAZON PAY*', 'AMAZON PAY', 'AMAZON.IN', 'AMZN', 'AMAZON RETAIL', 'Amazo N I', 'Amazo N P'],
   'Flipkart': ['FLIPKART', 'FLPKRT', 'FLK'],
   'Myntra': ['MYNTRA', 'MYNTR'],
   'Zudio': ['ZUDIO A'],
@@ -102,22 +104,57 @@ const categoryPatterns = {
   'Investment': ['PHONEP E', 'JAR', 'SAFE GOLD']
 };
 
-// Helper function to extract recipient/payer and bank from UPI transaction
 const extractUPIDetails = (description) => {
   const upperDesc = description.toUpperCase();
 
-  // Pattern 1: TO TRANSFER- UPI/DR/769299123210/VM MART/SBIN/HSBIMOPAD./Pay men- TRANSFER TO 4897694162092
-  const upiPattern1 = /UPI\/[DC]R\/\d+\/([^\/]+)\/([A-Z]{2,4}[0-9]*)\//i;
+  // Pattern 1: NEFT transfers - BY TRANSFER- NEFT*UTIB0003577*AXOIC09 636462631*TINKERHUB TECHNO- TRANSFER FROM 99509044300
+  const neftPattern = /BY TRANSFER-\s*NEFT\*([A-Z]{4}[0-9]*)\*[^*]*\*([^*-]+)-/i;
+  const neftMatch = upperDesc.match(neftPattern);
+
+  if (neftMatch) {
+    return {
+      recipient: neftMatch[2].trim(),
+      bank: detectBankFromText(neftMatch[1].trim())
+    };
+  }
+
+  // Pattern 2b: Handle UPI transactions with "E- TRANSFER TO" format
+  const upiLitePattern = /UPI\/[DC]R\/\d+\/([^\/\-]+)\s*E-\s*TRANSFER\s+TO\s+(\d+)/i;
+  const upiLiteMatch = upperDesc.match(upiLitePattern);
+
+  if (upiLiteMatch) {
+    return {
+      recipient: upiLiteMatch[1].trim(),
+      bank: null // UPI Lite transactions don't always have bank info
+    };
+  }
+
+  // Pattern 2: UPI/DR transactions - TO TRANSFER- UPI/DR/277998361286/SWIGGY/ICIC/SWIGGYSTOR/PAYMENT- TRAN…
+  const upiPattern1 = /UPI\/[DC]R\/\d+\/([^\/\-]+)(?:\/([A-Z]{2,4}[0-9]*|\w+\s+\w+)\/|\-)/i;
   const match1 = upperDesc.match(upiPattern1);
 
   if (match1) {
     return {
       recipient: match1[1].trim(),
-      bank: detectBankFromText(match1[2].trim())  // This will map "SBIN" to "SBI"
+      bank: match1[2] ? detectBankFromText(match1[2].trim()) : null
     };
   }
 
-  // Pattern 2: TO TRANSFER-MARGIN MONEY SOORAJ- TRANSFER TO 37608337103
+  // Pattern 2b: Handle UPI transactions with additional segments
+  const upiExtendedPattern = /UPI\/[DC]R\/\d+\/([^\/]+)\/\s*([A-Z]{2,4}[0-9]*)\/[^\/]+\/[^\/]+/i;
+  const extendedMatch = upperDesc.match(upiExtendedPattern);
+
+  if (extendedMatch) {
+    return {
+      recipient: extendedMatch[1].trim(),
+      bank: detectBankFromText(extendedMatch[2].trim())
+    };
+  }
+
+  const upiPattern1a = /UPI\/[DC]R\/\d+\/([^\/]+)\/I\s+POS\//i;
+  const match1a = upperDesc.match(upiPattern1a);
+
+  // Pattern 3: TO TRANSFER-MARGIN MONEY SOORAJ- TRANSFER TO 37608337103
   const transferPattern = /TO TRANSFER-([^-]+)-/i;
   const match2 = upperDesc.match(transferPattern);
 
@@ -128,7 +165,7 @@ const extractUPIDetails = (description) => {
     };
   }
 
-  // Pattern 3: BY TRANSFER (for credits)
+  // Pattern 4: BY TRANSFER (for credits)
   const byTransferPattern = /BY TRANSFER[^A-Z]*([A-Z\s]+)/i;
   const match3 = upperDesc.match(byTransferPattern);
 
@@ -139,24 +176,24 @@ const extractUPIDetails = (description) => {
     };
   }
 
-  // Pattern for ATM withdrawals: ATM WDL-ATM CASH 15672 NADUVATTOM PALLIPAD KARTHIKAPPALL-
+  // Pattern 5: ATM withdrawals
   const atmPattern = /ATM\s+WDL-ATM\s+CASH\s+(\d+)\s+([A-Z\s]+)-/i;
   const match4 = upperDesc.match(atmPattern);
 
   if (match4) {
     return {
       recipient: `ATM - ${match4[2].trim()}`,
-      bank: 'SBI'  // ATM withdrawals are typically from the same bank
+      bank: 'SBI'
     };
   }
 
-  // Pattern for MARGIN transfers: TO TRANSFER-MARGIN ETL 42862872741- TRANSFER TO 37608337103
+  // Pattern 6: MARGIN transfers
   const marginPattern = /TO TRANSFER-MARGIN\s+([A-Z\s]+)\s+(\d+)-/i;
   const match5 = upperDesc.match(marginPattern);
 
   if (match5) {
     return {
-      recipient: `MARGIN - ${match1[1].trim()}`,
+      recipient: `MARGIN - ${match5[1].trim()}`,
       bank: null
     };
   }
@@ -166,7 +203,6 @@ const extractUPIDetails = (description) => {
     bank: null
   };
 };
-
 // Helper function to categorize transaction based on recipient
 const categorizeTransaction = (recipient, description) => {
   if (!recipient) {
@@ -249,15 +285,15 @@ const extractDateRange = (text) => {
   return null;
 };
 
-// Helper function to clean and normalize text
 const cleanText = (text) => {
   return text
-    .replace(/\s+/g, ' ')
-    .replace(/\n/g, ' ')
-    .replace(/\t/g, ' ')
+    .toUpperCase()  // Convert to uppercase
+    .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+    .replace(/\n/g, ' ')   // Replace newlines with space
+    .replace(/\t/g, ' ')   // Replace tabs with space
+    .replace(/[\u00A0\u2000-\u200B\u2028\u2029]/g, ' ')  // Remove hidden characters
     .trim();
 };
-
 // Helper function to parse amount - handles Indian number format
 const parseAmount = (amountStr) => {
   if (!amountStr) return 0;
@@ -317,8 +353,10 @@ const detectTransactionType = (description) => {
 const reconstructTransactionLines = (text) => {
   console.log('Reconstructing transaction lines for SBI format...');
 
-  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  const lines = text.split('\n').map(line => cleanText(line)).filter(line => line.length > 0);
   const reconstructedLines = [];
+
+  console.log("normalised lines: ", lines)
 
   let currentTransaction = '';
   let transactionStartIndex = -1;
@@ -593,7 +631,7 @@ const parseSingleTransaction = (txnDate, valueDate, transactionText) => {
     console.log(`Parsing single transaction: "${transactionText}"`);
 
     // First, clean up the transaction text by removing common footer text
-    let cleanedText = transactionText
+    let cleanedText = cleanText(transactionText)
       .replace(/with anyone over mail, SMS, phone call or any other media\. Bank never asks for such information\./gi, '')
       .replace(/Please do not share your ATM.*?Bank never asks for such information\./gi, '')
       .replace(/\*\*This is a computer generated statement.*$/gi, '')
@@ -607,15 +645,23 @@ const parseSingleTransaction = (txnDate, valueDate, transactionText) => {
     const amountBalancePattern = /(.+?)\s+(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s*$/;
     const match = cleanedText.match(amountBalancePattern);
 
+    // Special handling for interest transactions with "--" separator
+    const interestPattern = /(.+?)\s*--\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s*$/;
+    const interestMatch = cleanedText.match(interestPattern);
+
     let description = cleanedText;
     let amount = '0.00';
     let balance = '0.00';
 
-    if (match) {
+    if (interestMatch) {
+      description = interestMatch[1].trim();
+      amount = interestMatch[2];
+      balance = interestMatch[3];
+      console.log(`Interest transaction extracted: description="${description}", amount="${amount}", balance="${balance}"`);
+    } else if (match) {
       description = match[1].trim();
       amount = match[2];
       balance = match[3];
-
       console.log(`Successfully extracted: description="${description}", amount="${amount}", balance="${balance}"`);
     } else {
       // Try pattern for concatenated amounts: "4,894.008,308.14" or "53,000.0059,815.89"
@@ -627,7 +673,8 @@ const parseSingleTransaction = (txnDate, valueDate, transactionText) => {
         amount = concatMatch[2];
         balance = concatMatch[3];
         console.log(`Concatenated amounts extracted: description="${description}", amount="${amount}", balance="${balance}"`);
-      } else {
+      }
+      else {
         console.log('No amount pattern found, using full text as description');
         // Try to extract any reference number for logging
         const refPattern = /(\d{12,})/;
