@@ -6,6 +6,62 @@ const path = require('path');
 const pdf = require('pdf-parse');
 const axios = require('axios');
 
+// Recipient name standardization mapping
+const recipientNameMapping = {
+  'Pappa': ['MURU GARA', 'MURUGARA', 'MURUGAR', 'MURU GAR'],
+  'Jar Gold': ['JAR'],
+  'Amazon': ['AMAZON PAY*', 'AMAZON PAY', 'AMAZON.IN', 'AMZN', 'AMAZON RETAIL'],
+  'ATM Withdrawal': ['SBI ATM WDL', 'ATM WDL', 'SBI ATM', 'ATM WITHDRAWAL', 'ATM', 'atm', 'Atm'],
+  'Eva Beauty': ['EVA BEAU'],
+  'Panda Supermarket': ['PANDA SU'],
+  'V-Mart': ['Vm mart', 'Vmmart', 'V MART', 'VM MART'],
+  'The Cake Shop': ['De cake', 'DE CAKE', 'DECAKE'],
+  'Al Baike Restaurant': ['Al baike', 'AL BAIKE', 'ALBAIKE'],
+  'Thaza Fast Food': ['Thaza fa', 'THAZA FA', 'THAZAFA'],
+  'King Food': ['King foo', 'KING FOO', 'KINGFOO'],
+  'Brufia Bakers': ['BRUFI A B'],
+  'Newland Bakery': ['NEWLA ND'],
+  'MS Kottayam': ['M S KOTT', 'MS KOTT', 'MSKOTT'],
+  'North Express': ['NORTH EX', 'NORTHEX', 'NORTH EXPRESS'],
+  'Shekhar Fuels': ['Shekhar ', 'Sekhar f', 'SHEKHAR', 'SEKHAR F', 'SHEKHA R'],
+  'Jaya Fuels': ['Jaya fuels', 'JAYA FUELS', 'JAYAFUELS'],
+  'Mohan Fuels': ['Mohan fu', 'MOHAN FU', 'MOHANFU', 'MOHA N FU'],
+  'KK Fuels, Haripad': ['K K Moha'],
+  'Olaketty Fuels': ['Olaketty', 'OLAKETTY', 'OLA KETTY', 'OLAKE TTY'],
+  'MS Petrols': ['MS PETRO', 'MSPETRO', 'MS PETROL'],
+  'Kuttanad Fuels': ['KUTTANA D'],
+  'Roverz Motors': ['ROVER Z M'],
+  'Abhinav': ['Abhinav  a', 'ABHINAV A', 'ABHINAV'],
+  'Navaneeth': ['NAVAN EETH', 'NAVAN EET'],
+  'Alina': ['ALINA T'],
+  'Maneesha': ['MANEE SHA'],
+  'Sreehari': ['SREED HAR'],
+  'Vyshnav': ['VYSHNA V'],
+  'Ananth K': ['ANANT H K'],
+  'Aashin': ['Aashin m', 'AASHIN M', 'AASHIN'],
+  'Mrs. Sanitha': ['Mrs  san', 'MRS SAN', 'MRS SANITHA'],
+  'Manu': ['MANU'],
+  'Margin Money': ['MARGIN ETL', 'MARGIN'],
+  'PhonePe': ['PHONEP E', 'PHONE PE', 'PHONEPE'],
+  'SafeGold': ['SAFE GOLD', 'SAFEGOLD', 'SAFE-GOLD'],
+  'Adidas': ['ADIDA S I'],
+  'Flipkart': ['FLIPKART', 'FLPKRT', 'FLK'],
+  'Myntra': ['MYNTRA', 'MYNTR'],
+  'Zudio': ['ZUDIO A'],
+  'KFC': ['kfc', 'KFC', 'K F C'],
+  'HPCL': ['Hpcl', 'HPCL', 'HP CL'],
+  'BookMyShow': ['Bookmyshow', 'BOOKMYSHOW', 'BOOK MY SHOW'],
+  'Jio': ['Jio', 'JIO', 'RJIO'],
+  'CUSAT': ['Cusat', 'CUSAT', 'CU SAT'],
+  'CUCEK': ['Cucek', 'CUCEK', 'CU CEK', 'COCHI N U'],
+  'MC Stores': ['M c', 'MC', 'M C'],
+  'SMS': ['SANTH OSH'],
+  'Indian Railway': ['Indian r', 'INDIAN R', 'INDIAN RAILWAY', 'Irctc', 'IRCTC'],
+  'AbhiBus': ['Abhibus', 'ABHIBUS', 'ABHI BUS'],
+  'Ixigo': ['Ixigo', 'IXIGO', 'IX IGO'],
+  'MyG Kayamkulam': ['MYG KAYA']
+};
+
 // Bank patterns for identification
 const bankPatterns = {
   'SBI': ['SBIN', 'STATE BANK', 'SBI', 'SBIN0006399'],
@@ -18,7 +74,7 @@ const bankPatterns = {
   'Bank of Baroda': ['BANK OF BARODA', 'BOB', 'BARB'],
   'Canara Bank': ['CANARA', 'CNRB'],
   'Union Bank': ['UNION BANK', 'UBIN'],
-  'Yes Bank': ['YES BANK', 'YESB', 'YE SB']
+  'Yes Bank': ['YES BANK', 'YESB', 'YE SB', 'Y ESB']
 };
 
 // Category mapping based on merchant/recipient names
@@ -30,7 +86,7 @@ const categoryPatterns = {
   'Recharge': ['Jio'],
   'Pappa': ['Murugara', 'MURU GARA'],
   'College': ['Cusat', 'Abin', 'M c', 'Abhinav  a', 'Cucek', 'Aashin m', 'Sajumon', 'Mrs  san', 'Santhosh'],
-  'Withdrawal': ['Atm'],
+  'Withdrawal': ['Atm', 'ATM WDL', 'ATM CASH'],
   'Travel': ['Indian r', 'Irctc', 'Abhibus', 'Ixigo'],
   'Investment': ['PHONEP E', 'JAR', 'SAFE GOLD']
 };
@@ -40,13 +96,13 @@ const extractUPIDetails = (description) => {
   const upperDesc = description.toUpperCase();
 
   // Pattern 1: TO TRANSFER- UPI/DR/769299123210/VM MART/SBIN/HSBIMOPAD./Pay men- TRANSFER TO 4897694162092
-  const upiPattern1 = /UPI\/[DC]R\/\d+\/([^\/]+)\/([A-Z]{2,4})\s*([A-Z]{2})\//i;
+  const upiPattern1 = /UPI\/[DC]R\/\d+\/([^\/]+)\/([A-Z]{2,4}[0-9]*)\//i;
   const match1 = upperDesc.match(upiPattern1);
 
   if (match1) {
     return {
       recipient: match1[1].trim(),
-      bank: detectBankFromText(match1[2].trim() + match1[3].trim())  // This will map "SBIN" to "SBI"
+      bank: detectBankFromText(match1[2].trim())  // This will map "SBIN" to "SBI"
     };
   }
 
@@ -68,6 +124,28 @@ const extractUPIDetails = (description) => {
   if (match3) {
     return {
       recipient: match3[1].trim(),
+      bank: null
+    };
+  }
+
+  // Pattern for ATM withdrawals: ATM WDL-ATM CASH 15672 NADUVATTOM PALLIPAD KARTHIKAPPALL-
+  const atmPattern = /ATM\s+WDL-ATM\s+CASH\s+(\d+)\s+([A-Z\s]+)-/i;
+  const match4 = upperDesc.match(atmPattern);
+
+  if (match4) {
+    return {
+      recipient: `ATM - ${match4[2].trim()}`,
+      bank: 'SBI'  // ATM withdrawals are typically from the same bank
+    };
+  }
+
+  // Pattern for MARGIN transfers: TO TRANSFER-MARGIN ETL 42862872741- TRANSFER TO 37608337103
+  const marginPattern = /TO TRANSFER-MARGIN\s+([A-Z\s]+)\s+(\d+)-/i;
+  const match5 = upperDesc.match(marginPattern);
+
+  if (match5) {
+    return {
+      recipient: `MARGIN - ${match1[1].trim()}`,
       bank: null
     };
   }
@@ -112,6 +190,25 @@ const detectBankFromText = (text) => {
     }
   }
   return text;
+};
+
+// Helper function to standardize recipient names
+const standardizeRecipientName = (recipient) => {
+  if (!recipient) return null;
+
+  // Clean up the recipient name first
+  let cleanedRecipient = recipient.trim();
+  const upperRecipient = cleanedRecipient.toUpperCase();
+
+  // Check for matches in mapping
+  for (const [standardName, patterns] of Object.entries(recipientNameMapping)) {
+    if (patterns.some(pattern => upperRecipient.includes(pattern.toUpperCase()))) {
+      return standardName;
+    }
+  }
+
+  // Return cleaned recipient if no mapping found
+  return cleanedRecipient;
 };
 
 // Helper function to extract date range
@@ -543,7 +640,8 @@ const parseSingleTransaction = (txnDate, valueDate, transactionText) => {
     const upiDetails = extractUPIDetails(description);
 
     // Determine category
-    const category = categorizeTransaction(upiDetails.recipient, description);
+    const standardizedRecipient = standardizeRecipientName(upiDetails.recipient);
+    const category = categorizeTransaction(standardizedRecipient, description);
 
     // Clean up description by removing extra spaces
     description = description.replace(/\s+/g, ' ').trim();
@@ -561,7 +659,7 @@ const parseSingleTransaction = (txnDate, valueDate, transactionText) => {
       credit: txnType === 'credit' ? amount : '',
       rawAmount: amount,
       rawBalance: balance,
-      recipient: upiDetails.recipient,
+      recipient: standardizeRecipientName(upiDetails.recipient),
       recipientBank: upiDetails.bank,
       category: category
     };
