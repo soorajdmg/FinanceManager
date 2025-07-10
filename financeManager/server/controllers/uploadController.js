@@ -21,9 +21,12 @@ const recipientNameMapping = {
   'Al Baike Restaurant': ['Al baike', 'AL BAIKE', 'ALBAIKE'],
   'Thaza Fast Food': ['Thaza fa', 'THAZA FA', 'THAZAFA'],
   'King Food': ['King foo', 'KING FOO', 'KINGFOO'],
+  'Kottayam Company': ['Ms Kottayam'],
   'Brufia Bakers': ['BRUFI A B'],
   'Newland Bakery': ['NEWLA ND'],
+  'Anns Bakery': ['Anns Bak'],
   'A2B Adyar': ['Adyar An'],
+  'NIIST Canteen': ['Niist Ca'],
   'Swiggy': ['Swigg Y', 'Swiggy Ltd', 'Swiggy L', 'Swiggy'],
   'KFC': ['kfc', 'KFC', 'K F C'],
   'Chicking': ['Chickin G'],
@@ -48,8 +51,12 @@ const recipientNameMapping = {
   'Sreehari': ['SREED HAR', 'Sreeh Ari'],
   'Vyshnav': ['VYSHNA V'],
   'Ananth K': ['ANANT H K'],
+  'Madhumith': ['Madh Umit', 'Madhumit'],
   'Aashin': ['Aashin m', 'AASHIN M', 'AASHIN'],
+  'Mishal': ['Misha L T'],
+  'Sangeerth': ['Sange Ert', 'Sangeerth'],
   'Mrs. Sanitha': ['Mrs  san', 'MRS SAN', 'MRS SANITHA'],
+  'Muhammed': ['Muham Med'],
   'Manu': ['MANU'],
   'Margin Money': ['MARGIN ETL', 'MARGIN'],
   'PhonePe': ['PHONEP E', 'PHONE PE', 'PHONEPE'],
@@ -59,15 +66,18 @@ const recipientNameMapping = {
   'Amazon': ['AMAZON PAY*', 'AMAZON PAY', 'AMAZON.IN', 'AMZN', 'AMAZON RETAIL', 'Amazo N I', 'Amazo N P'],
   'Flipkart': ['FLIPKART', 'FLPKRT', 'FLK'],
   'Myntra': ['MYNTRA', 'MYNTR'],
+  'Decathlon': ['Decathl On'],
   'Zudio': ['ZUDIO A'],
   'HPCL': ['Hpcl', 'HPCL', 'HP CL'],
   'Redbus': ['Redbu S'],
   'BookMyShow': ['Bookmyshow', 'BOOKMYSHOW', 'BOOK MY SHOW', 'Bookmy Show'],
+  'Uber India': ['Uber Ind'],
   'Jio': ['Jio', 'JIO', 'RJIO'],
   'CUSAT': ['Cusat', 'CUSAT', 'CU SAT'],
   'CUCEK': ['Cucek', 'CUCEK', 'CU CEK', 'COCHI N U'],
   'MC Stores': ['M c', 'MC', 'M C'],
   'SMS': ['SANTH OSH'],
+  'Icespot': ['Icesp Ot'],
   'Indian Railway': ['Indian r', 'INDIAN R', 'INDIAN RAILWAY', 'Irctc', 'IRCTC'],
   'AbhiBus': ['Abhibus', 'ABHIBUS', 'ABHI BUS'],
   'Ixigo': ['Ixigo', 'IXIGO', 'IX IGO'],
@@ -93,7 +103,7 @@ const bankPatterns = {
 // Category mapping based on merchant/recipient names
 const categoryPatterns = {
   'Shopping': ['Kattoor', 'Amazon', 'Flipkart', 'Myntra', 'More', 'Vmmart', 'Vm mart', 'Lulu', 'Adidas', 'Marginfr', 'Myg', 'Reliance', 'Trends', 'Zudio'],
-  'Food': ['De cake', 'Brufia', 'kfc', 'Utsav', 'Thomson', 'Al baike', 'Thaza fa', 'King foo', 'M S KOTT', 'NORTH EX', 'Swigg Y', 'M S Wing'],
+  'Food': ['De cake', 'Brufia', 'kfc', 'Utsav', 'Thomson', 'Al baike', 'Thaza fa', 'King foo', 'M S KOTT', 'NORTH EX', 'Swigg Y', 'M S Wing', 'Kottayam Company', 'NIIST Canteen'],
   'Fuel': ['petrol', 'Shekhar ', 'Sekhar f', 'Kuttanad', 'Hpcl', 'Jaya fuels', 'Mohan fu', 'Olaketty', 'MS PETRO'],
   'Movie': ['Bookmyshow', 'Ganam'],
   'Recharge': ['Jio'],
@@ -101,7 +111,7 @@ const categoryPatterns = {
   'College': ['Cusat', 'Abin', 'M c', 'Abhinav  a', 'Cucek', 'Aashin m', 'Sajumon', 'Mrs  san', 'Santhosh'],
   'Withdrawal': ['Atm', 'ATM WDL', 'ATM CASH'],
   'Travel': ['Indian r', 'Irctc', 'Abhibus', 'Ixigo'],
-  'Investment': ['PHONEP E', 'JAR', 'SAFE GOLD']
+  'Investment': ['PHONEP E', 'JAR', 'SAFE GOLD', 'Safegold']
 };
 
 const extractUPIDetails = (description) => {
