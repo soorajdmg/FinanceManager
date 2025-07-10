@@ -19,6 +19,7 @@ const DocumentUpload = () => {
     const [processedData, setProcessedData] = useState(null);
     const [showResults, setShowResults] = useState(false);
     const [importingTransactions, setImportingTransactions] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
     const fileInputRef = useRef(null);
 
     // API Base URL - Safe way to access environment variables
@@ -122,22 +123,20 @@ const DocumentUpload = () => {
         return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
     };
 
-    const handleSubmit = async () => {
-        if (uploadedFiles.length === 0) {
-            setUploadError('Please upload at least one PDF bank statement file');
-            return;
-        }
-
-        setIsUploading(true);
-        setUploadError('');
-
+    const processFile = async (fileData, index) => {
         try {
-            // Process each file (for now, we'll handle one at a time)
-            const file = uploadedFiles[0];
+            // Update file status to processing
+            setUploadedFiles(prev =>
+                prev.map(file =>
+                    file.id === fileData.id
+                        ? { ...file, status: 'processing' }
+                        : file
+                )
+            );
 
             // Create FormData to send file to backend
             const formData = new FormData();
-            formData.append('bankStatement', file.file);
+            formData.append('bankStatement', fileData.file);
 
             const token = getAuthToken();
 
@@ -150,7 +149,7 @@ const DocumentUpload = () => {
             });
 
             const result = await response.json();
-            console.log('Upload result:', result);
+            console.log(`Upload result for file ${index + 1}:`, result);
 
             if (!response.ok) {
                 throw new Error(result.message || 'Upload failed');
@@ -158,20 +157,99 @@ const DocumentUpload = () => {
 
             // Update file status to completed
             setUploadedFiles(prev =>
-                prev.map(fileData => ({ ...fileData, status: 'completed' }))
+                prev.map(file =>
+                    file.id === fileData.id
+                        ? { ...file, status: 'completed', processedData: result.data }
+                        : file
+                )
             );
 
-            // Store processed data
-            setProcessedData(result.data);
-            setShowResults(true);
-
-            console.log('Bank statement processed successfully:', result);
+            return result.data;
 
         } catch (error) {
-            setUploadError(error.message || 'Upload failed. Please try again.');
-            console.error('Upload error:', error);
+            console.error(`Upload error for file ${index + 1}:`, error);
+
+            // Update file status to error
+            setUploadedFiles(prev =>
+                prev.map(file =>
+                    file.id === fileData.id
+                        ? { ...file, status: 'error', error: error.message }
+                        : file
+                )
+            );
+
+            throw error;
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (uploadedFiles.length === 0) {
+            setUploadError('Please upload at least one PDF bank statement file');
+            return;
+        }
+
+        setIsUploading(true);
+        setUploadError('');
+        setUploadProgress({ current: 0, total: uploadedFiles.length });
+
+        const allProcessedData = [];
+        let successCount = 0;
+        let errorCount = 0;
+
+        try {
+            // Process files one by one
+            for (let i = 0; i < uploadedFiles.length; i++) {
+                const fileData = uploadedFiles[i];
+                setUploadProgress({ current: i + 1, total: uploadedFiles.length });
+
+                try {
+                    const processedResult = await processFile(fileData, i);
+                    allProcessedData.push(processedResult);
+                    successCount++;
+                } catch (error) {
+                    errorCount++;
+                    // Continue processing other files even if one fails
+                }
+            }
+
+            // Combine all processed data
+            const combinedData = {
+                transactions: [],
+                transactionsFound: 0,
+                accountInfo: {},
+                filesProcessed: uploadedFiles.length,
+                successCount,
+                errorCount
+            };
+
+            allProcessedData.forEach(data => {
+                if (data.transactions && Array.isArray(data.transactions)) {
+                    combinedData.transactions = [...combinedData.transactions, ...data.transactions];
+                }
+                combinedData.transactionsFound += data.transactionsFound || 0;
+
+                // Use account info from first successful file
+                if (data.accountInfo && Object.keys(combinedData.accountInfo).length === 0) {
+                    combinedData.accountInfo = data.accountInfo;
+                }
+            });
+
+            // Store combined processed data
+            setProcessedData(combinedData);
+            setShowResults(true);
+
+            if (errorCount > 0) {
+                setUploadError(`${successCount} file(s) processed successfully, ${errorCount} file(s) failed`);
+            }
+
+            console.log('All files processed:', combinedData);
+
+        } catch (error) {
+            setUploadError('Processing failed. Please try again.');
+            console.error('Processing error:', error);
         } finally {
             setIsUploading(false);
+            setUploadProgress({ current: 0, total: 0 });
         }
     };
 
@@ -288,7 +366,8 @@ const DocumentUpload = () => {
                             <div className="header-content">
                                 <h1 className="upload-title">Bank Statement Processed</h1>
                                 <p className="upload-subtitle">
-                                    Successfully extracted {processedData.transactionsFound} transactions from your bank statement
+                                    Successfully extracted {processedData.transactionsFound} transactions from {processedData.filesProcessed} file(s)
+                                    {processedData.errorCount > 0 && ` (${processedData.errorCount} file(s) failed)`}
                                 </p>
                                 <button
                                     className='back-button'
@@ -454,6 +533,21 @@ const DocumentUpload = () => {
                             </div>
                         </div>
 
+                        {/* Progress Indicator */}
+                        {isUploading && (
+                            <div className="upload-progress">
+                                <div className="progress-info">
+                                    <span>Processing file {uploadProgress.current} of {uploadProgress.total}</span>
+                                </div>
+                                <div className="progress-bar">
+                                    <div
+                                        className="progress-fill"
+                                        style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Error Message */}
                         {uploadError && (
                             <div className="error-message">
@@ -471,7 +565,7 @@ const DocumentUpload = () => {
                                     {uploadedFiles.map((fileData, index) => (
                                         <div
                                             key={fileData.id}
-                                            className="file-item"
+                                            className={`file-item ${fileData.status}`}
                                         >
                                             <div className="file-info">
                                                 <div className="file-icon">
@@ -481,12 +575,27 @@ const DocumentUpload = () => {
                                                 <div className="file-details">
                                                     <p className="file-name">{fileData.name}</p>
                                                     <p className="file-size">{formatFileSize(fileData.size)}</p>
+                                                    {fileData.status === 'processing' && (
+                                                        <p className="file-status">Processing...</p>
+                                                    )}
+                                                    {fileData.status === 'completed' && (
+                                                        <p className="file-status success">Completed</p>
+                                                    )}
+                                                    {fileData.status === 'error' && (
+                                                        <p className="file-status error">Error: {fileData.error}</p>
+                                                    )}
                                                 </div>
                                             </div>
 
                                             <div className="file-actions">
+                                                {fileData.status === 'processing' && (
+                                                    <Loader2 className="status-icon processing spinning" size={16} />
+                                                )}
                                                 {fileData.status === 'completed' && (
                                                     <CheckCircle className="status-icon success" />
+                                                )}
+                                                {fileData.status === 'error' && (
+                                                    <AlertCircle className="status-icon error" />
                                                 )}
 
                                                 <button
@@ -520,7 +629,7 @@ const DocumentUpload = () => {
                                     </>
                                 ) : (
                                     <>
-                                        Process file
+                                        Process file{uploadedFiles.length > 1 ? 's' : ''}
                                     </>
                                 )}
                             </button>

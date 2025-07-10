@@ -29,6 +29,17 @@ const {
   importTransactions,
   getUploadHistory
 } = require('../controllers/uploadController');
+const {
+  getUserStats,
+  getStatsSummary,
+  refreshUserStats,
+  getCategoryBreakdown,
+  getMonthlyTrends,
+  getMonthStats,
+  updateUserGoals,
+  getHealthScore,
+  getCurrentMonthStats
+} = require('../controllers/statsController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { uploadBankStatement: uploadMiddleware, handleUploadError } = require('../middleware/uploadMiddleware');
 
@@ -57,6 +68,22 @@ router.get('/budgets/stats', authMiddleware, getBudgetStats);
 router.get('/budgets/:id', authMiddleware, getBudget);
 router.put('/budgets/:id', authMiddleware, updateBudget);
 router.delete('/budgets/:id', authMiddleware, deleteBudget);
+
+// Stats routes (all protected)
+// Total stats routes
+router.get('/stats/:userId', authMiddleware, getUserStats);
+router.get('/stats/:userId/summary', authMiddleware, getStatsSummary);
+router.post('/stats/:userId/refresh', authMiddleware, refreshUserStats);
+router.put('/stats/:userId/goals', authMiddleware, updateUserGoals);
+router.get('/stats/:userId/health-score', authMiddleware, getHealthScore);
+
+// Monthly stats routes
+router.get('/stats/:userId/current-month', authMiddleware, getCurrentMonthStats);
+router.get('/stats/:userId/month/:year/:month', authMiddleware, getMonthStats);
+router.get('/stats/:userId/trends', authMiddleware, getMonthlyTrends);
+
+// Category and analysis routes
+router.get('/stats/:userId/categories', authMiddleware, getCategoryBreakdown);
 
 // Upload routes (all protected)
 router.post('/upload/bank-statement', authMiddleware, uploadMiddleware, handleUploadError, uploadBankStatement);
