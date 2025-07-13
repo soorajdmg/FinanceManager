@@ -29,7 +29,7 @@ const useAuth = () => {
     // Check for token in localStorage on app startup
     const token = localStorage.getItem('authToken');
     const userData = localStorage.getItem('user');
-    
+
     if (token) {
       setIsAuthenticated(true);
       if (userData) {
@@ -221,7 +221,7 @@ const App = () => {
               activeSection={getActiveSection()}
               onNavigate={handleNavigation}
             >
-              <Dashboard />
+              <Dashboard userData={user} />
             </PrivateLayout>
           </ProtectedRoute>
         }

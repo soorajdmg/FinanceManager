@@ -14,7 +14,7 @@ const recipientNameMapping = {
   'Tinkerhub': ['TINKERHUB TECHNO', 'TINKERHUB', 'TINKER HUB'],
   'Eva Beauty': ['EVA BEAU'],
   'Panda Supermarket': ['PANDA SU'],
-  'Kattoor Supermaret': ['Katto Or'],
+  'Kattoor Supermarket': ['Katto Or'],
   'V-Mart': ['Vm mart', 'Vmmart', 'V MART', 'VM MART'],
   'Wings Co.': ['M S Wing'],
   'The Cake Shop': ['De cake', 'DE CAKE', 'DECAKE'],

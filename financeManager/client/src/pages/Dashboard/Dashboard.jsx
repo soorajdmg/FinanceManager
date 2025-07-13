@@ -44,7 +44,8 @@ const AnimatedPieChart = ({ data, size = 200, isDarkMode }) => {
       blue: '#3b82f6',
       emerald: '#10b981',
       violet: '#8b5cf6',
-      amber: '#f59e0b'
+      amber: '#f59e0b',
+      pink: '#da80e2ff'
     };
     return colors[colorName] || colors.blue;
   };
@@ -105,10 +106,17 @@ const AnimatedPieChart = ({ data, size = 200, isDarkMode }) => {
   );
 };
 
-const Dashboard = ({ isDarkMode, userId }) => {
+const Dashboard = ({ isDarkMode, userData }) => {
+  const [hasData, setHasData] = useState(true);
   const incomeExpenseChartRef = useRef(null);
   const [chartInstances, setChartInstances] = useState({ line: null, pie: null });
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
 
   // Backend integration state
   const [stats, setStats] = useState(null);
@@ -116,8 +124,67 @@ const Dashboard = ({ isDarkMode, userId }) => {
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
+
+  const userId = userData.id
+
   // API base URL - adjust according to your backend
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  const API_BASE_URL = 'http://localhost:5000/api';
+
+  const fetchMonthlyStats = async (month) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem('authToken');
+      const requestUrl = `${API_BASE_URL}/stats/${userId}/summary?month=${month}`;
+
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 401) {
+        const errorText = await response.text();
+        throw new Error(`Unauthorized: ${errorText}`);
+      }
+
+      const response_data = await response.json();
+      setStats(response_data.data);
+
+      const isEmpty = !response_data.data ||
+        (response_data.data.availableBalance === 0 &&
+          response_data.data.thisMonthIncome === 0 &&
+          response_data.data.thisMonthExpenses === 0 &&
+          (!response_data.data.categorySpending || response_data.data.categorySpending.length === 0));
+
+      setHasData(!isEmpty);
+
+    } catch (err) {
+      console.error('Error fetching monthly stats:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+    if (period === 'total') {
+      fetchStats();
+    } else {
+      fetchMonthlyStats(selectedMonth);
+    }
+  };
+
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+    if (selectedPeriod === 'month') {
+      fetchMonthlyStats(month);
+    }
+  };
 
   // Fetch stats from backend
   const fetchStats = async () => {
@@ -125,21 +192,42 @@ const Dashboard = ({ isDarkMode, userId }) => {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('token'); // Adjust based on your auth implementation
+      const token = localStorage.getItem('authToken');
+      const requestUrl = `${API_BASE_URL}/stats/${userId}/summary`;
 
-      const response = await fetch(`${API_BASE_URL}/stats/${userId}`, {
+      console.log("Making request to:", requestUrl);
+      console.log("UserId:", userId);
+      console.log("API_BASE_URL:", API_BASE_URL);
+
+      const response = await fetch(requestUrl, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
+      // Log the actual response body for 401 errors
+      if (response.status === 401) {
+        const errorText = await response.text();
+        console.log("401 Error response body:", errorText);
+        throw new Error(`Unauthorized: ${errorText}`);
       }
 
-      const data = await response.json();
-      setStats(data);
+      const response_data = await response.json();
+      setStats(response_data.data); // Access the nested data property
+
+      const isEmpty = !response_data.data ||
+        (response_data.data.availableBalance === 0 &&
+          response_data.data.thisMonthIncome === 0 &&
+          response_data.data.thisMonthExpenses === 0 &&
+          (!response_data.data.categorySpending || response_data.data.categorySpending.length === 0));
+
+      setHasData(!isEmpty);
+
     } catch (err) {
       console.error('Error fetching stats:', err);
       setError(err.message);
@@ -148,10 +236,30 @@ const Dashboard = ({ isDarkMode, userId }) => {
     }
   };
 
+  const fetchMonthlyTrends = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/stats/${userId}/trends`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+    } catch (err) {
+      console.error('Error fetching monthly trends:', err);
+    }
+    return null;
+  };
+
   // Fetch category breakdown
   const fetchCategoryBreakdown = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
 
       const response = await fetch(`${API_BASE_URL}/stats/${userId}/categories`, {
         headers: {
@@ -170,14 +278,11 @@ const Dashboard = ({ isDarkMode, userId }) => {
     return null;
   };
 
-  // Refresh stats
-  const refreshStats = async () => {
+  // Fetch total category breakdown (not just monthly)
+  const fetchTotalCategoryBreakdown = async () => {
     try {
-      setRefreshing(true);
-      const token = localStorage.getItem('token');
-
-      const response = await fetch(`${API_BASE_URL}/stats/${userId}/refresh`, {
-        method: 'POST',
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/stats/${userId}/categories`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -185,65 +290,84 @@ const Dashboard = ({ isDarkMode, userId }) => {
       });
 
       if (response.ok) {
-        await fetchStats();
+        const data = await response.json();
+        console.log('Total category breakdown response:', data);
+        return data;
       }
     } catch (err) {
-      console.error('Error refreshing stats:', err);
-    } finally {
-      setRefreshing(false);
+      console.error('Error fetching total category breakdown:', err);
     }
+    return null;
   };
 
-  // Initial data fetch
+
   useEffect(() => {
     if (userId) {
-      fetchStats();
+      const loadDashboardData = async () => {
+        await fetchStats();
+
+        // Fetch monthly trends and update stats
+        const trends = await fetchMonthlyTrends();
+        if (trends) {
+          setStats(prevStats => ({
+            ...prevStats,
+            monthlyTrends: trends.data || trends
+          }));
+        }
+
+        // Fetch total category breakdown for pie chart
+        const totalCategories = await fetchTotalCategoryBreakdown();
+        if (totalCategories) {
+          setStats(prevStats => ({
+            ...prevStats,
+            totalCategorySpending: totalCategories.data || totalCategories
+          }));
+        }
+      };
+
+      loadDashboardData();
     }
   }, [userId]);
 
   // Generate dashboard cards from stats
   const generateDashboardCards = () => {
     if (!stats) return [];
-
-    const calculateChange = (current, previous) => {
-      if (!previous || previous === 0) return 0;
-      return ((current - previous) / previous) * 100;
-    };
+    console.log("Stats: ", stats)
 
     return [
       {
-        title: 'Total Balance',
-        value: `₹${stats.totalBalance?.toLocaleString() || '0.00'}`,
-        change: `${stats.monthlyGrowth?.netWorth >= 0 ? '+' : ''}${stats.monthlyGrowth?.netWorth?.toFixed(1) || '0.0'}%`,
+        title: 'Current Balance',
+        value: `₹${stats.availableBalance?.toLocaleString() || '0.00'}`,
+        change: `0.0%`, // You don't have monthlyGrowth data
         changeText: 'from last month',
-        isPositive: (stats.monthlyGrowth?.netWorth || 0) >= 0,
+        isPositive: true,
         icon: DollarSign,
         color: 'icon',
       },
       {
         title: 'Savings Rate',
         value: `${stats.savingsRate?.toFixed(1) || '0.0'}%`,
-        change: `${stats.monthlyGrowth?.savings >= 0 ? '+' : ''}${stats.monthlyGrowth?.savings?.toFixed(1) || '0.0'}%`,
+        change: `0.0%`, // You don't have monthlyGrowth data
         changeText: 'from last month',
-        isPositive: (stats.monthlyGrowth?.savings || 0) >= 0,
+        isPositive: (stats.savingsRate || 0) >= 0,
         icon: PieChart,
         color: 'violet',
       },
       {
         title: 'Monthly Income',
-        value: `₹${stats.monthlyIncome?.toLocaleString() || '0.00'}`,
-        change: `${stats.monthlyGrowth?.income >= 0 ? '+' : ''}${stats.monthlyGrowth?.income?.toFixed(1) || '0.0'}%`,
+        value: `₹${stats.thisMonthIncome?.toLocaleString() || '0.00'}`,
+        change: `0.0%`, // You don't have monthlyGrowth data
         changeText: 'from last month',
-        isPositive: (stats.monthlyGrowth?.income || 0) >= 0,
+        isPositive: true,
         icon: TrendingUp,
         color: 'blue',
       },
       {
         title: 'Monthly Expenses',
-        value: `₹${stats.monthlyExpenses?.toLocaleString() || '0.00'}`,
-        change: `${stats.monthlyGrowth?.expenses >= 0 ? '+' : ''}${stats.monthlyGrowth?.expenses?.toFixed(1) || '0.0'}%`,
+        value: `₹${stats.thisMonthExpenses?.toLocaleString() || '0.00'}`,
+        change: `0.0%`, // You don't have monthlyGrowth data
         changeText: 'from last month',
-        isPositive: (stats.monthlyGrowth?.expenses || 0) < 0, // Negative expense growth is positive
+        isPositive: false,
         icon: TrendingDown,
         color: 'amber',
       }
@@ -252,9 +376,10 @@ const Dashboard = ({ isDarkMode, userId }) => {
 
   // Generate chart data from stats
   const generateChartData = () => {
-    if (!stats || !stats.monthlyTrends) return null;
+    console.log('Stats for chart:', stats);
+    if (!stats || !stats.monthlyTrends || stats.monthlyTrends.length === 0) return null;
 
-    const last6Months = stats.monthlyTrends.slice(-6);
+    const last6Months = stats.monthlyTrends ? stats.monthlyTrends.slice(-6) : [];
 
     return {
       labels: last6Months.map(trend => `${trend.month} ${trend.year}`),
@@ -289,11 +414,11 @@ const Dashboard = ({ isDarkMode, userId }) => {
 
   // Generate pie chart data from category spending
   const generatePieChartData = () => {
-    if (!stats || !stats.categorySpending) return [];
+    if (!stats || !stats.totalCategorySpending || !stats.totalCategorySpending.categories) return [];
 
-    const colors = ['blue', 'emerald', 'violet', 'amber', 'red'];
+    const colors = ['blue', 'emerald', 'violet', 'amber', 'pink'];
 
-    return stats.categorySpending.slice(0, 5).map((category, index) => ({
+    return stats.totalCategorySpending.categories.slice(0, 5).map((category, index) => ({
       label: category.category,
       amount: category.amount,
       color: colors[index % colors.length]
@@ -470,16 +595,43 @@ const Dashboard = ({ isDarkMode, userId }) => {
       <div className={`dashboard-container ${isDarkMode ? 'dark' : ''}`}>
         <div className="dashboard-padding">
           <div className="dashboard-max-width">
-            <div className="error-container">
-              <AlertCircle className="error-icon" />
-              <p className="error-text">Error loading dashboard data: {error}</p>
-              <button
-                onClick={fetchStats}
-                className="retry-button"
-              >
-                <RefreshCw className="retry-icon" />
-                Retry
-              </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!hasData) {
+    return (
+      <div className={`dashboard-container ${isDarkMode ? 'dark' : ''}`}>
+        <div className="dashboard-padding">
+          <div className="dashboard-max-width">
+            <div className="no-data-container">
+              <div className="no-data-content">
+                <PieChart className="no-data-icon" />
+                <h3 className="no-data-title">No data found for this month</h3>
+                <p className="no-data-subtitle">
+                  Upload the bank statement to get insights
+                </p>
+                <button
+                  className="refresh-button"
+                  onClick={fetchStats}
+                  disabled={refreshing}
+                >
+                  {refreshing ? (
+                    <>
+                      <Loader2 className="refresh-icon spinning" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="refresh-icon" />
+                      Refresh
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -497,24 +649,34 @@ const Dashboard = ({ isDarkMode, userId }) => {
       {/* Header Section */}
       <div className="dashboard-padding">
         <div className="dashboard-max-width">
-          {/* Header with refresh button */}
-          <div className="dashboard-header">
-            <div>
-              <h1 className="dashboard-title">Financial Dashboard</h1>
-              <p className="dashboard-subtitle">
-                Last updated: {stats?.lastCalculated ? new Date(stats.lastCalculated).toLocaleDateString() : 'Never'}
-              </p>
+          {/* Stats Filter */}
+          <div className="stats-filter-container">
+            <div className="stats-filter-buttons">
+              <button
+                className={`filter-button ${selectedPeriod === 'total' ? 'active' : ''}`}
+                onClick={() => handlePeriodChange('total')}
+              >
+                Total Stats
+              </button>
+              <button
+                className={`filter-button ${selectedPeriod === 'month' ? 'active' : ''}`}
+                onClick={() => handlePeriodChange('month')}
+              >
+                Monthly Stats
+              </button>
             </div>
-            <button
-              onClick={refreshStats}
-              disabled={refreshing}
-              className="refresh-button"
-            >
-              <RefreshCw className={`refresh-icon ${refreshing ? 'spinning' : ''}`} />
-              {refreshing ? 'Refreshing...' : 'Refresh'}
-            </button>
-          </div>
 
+            {selectedPeriod === 'month' && (
+              <div className="month-selector">
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => handleMonthChange(e.target.value)}
+                  className="month-input"
+                />
+              </div>
+            )}
+          </div>
           {/* Stats Cards */}
           <div className="stats-grid">
             {dashboardCards.map((card, index) => {
