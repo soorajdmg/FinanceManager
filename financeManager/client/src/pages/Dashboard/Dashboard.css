@@ -204,18 +204,24 @@
 }
 
 .filter-button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 0.5rem;
-    background: transparent;
     color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.25rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
     font-size: 0.875rem;
     font-weight: 500;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #0f172a;
     cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
+    outline: none;
     overflow: hidden;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .dark-mode .filter-button {
@@ -229,7 +235,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    background: linear-gradient(90deg, transparent, rgba(38, 47, 61, 0.1), transparent);
     transition: left 0.5s ease;
 }
 
@@ -249,9 +255,9 @@
 }
 
 .filter-button.active {
-    background: #3b82f6;
+    background: #7d8a9c;
     color: white;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 12px #7d8a9c47;
     transform: translateY(-1px);
 }
 
@@ -286,7 +292,7 @@
 }
 
 .month-input:hover {
-    border-color: #3b82f6;
+    border-color: #7d8a9c;
     background: #f1f5f9;
 }
 
@@ -296,8 +302,7 @@
 }
 
 .month-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 131, 246, 0.115)
 }
 
 .dark-mode .month-input:focus {
