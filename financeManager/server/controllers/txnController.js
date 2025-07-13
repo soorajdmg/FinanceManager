@@ -45,10 +45,10 @@ const createTransaction = async (req, res) => {
 const getTransactions = async (req, res) => {
   try {
     const { page = 1, limit = 1000, type, category, startDate, endDate } = req.query;
-    
+
     // Build filter object
     const filter = { userId: req.user.id };
-    
+
     if (type) filter.type = type;
     if (category) filter.category = category;
     if (startDate || endDate) {
@@ -59,7 +59,7 @@ const getTransactions = async (req, res) => {
 
     // Calculate pagination
     const skip = (page - 1) * limit;
-    
+
     // Get transactions with pagination
     const transactions = await Transaction.find(filter)
       .sort({ transactionDate: -1 })
@@ -194,7 +194,7 @@ const deleteTransaction = async (req, res) => {
 const getTransactionStats = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    
+
     // Build match filter
     const matchFilter = { userId: req.user.id };
     if (startDate || endDate) {

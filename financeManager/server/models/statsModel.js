@@ -184,7 +184,7 @@ const statsSchema = new mongoose.Schema({
         type: Number,
         required: true,
         default: 0,
-        min: 0,
+        min: -500,
         max: 100
     },
     // Last calculation timestamp
