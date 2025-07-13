@@ -488,7 +488,7 @@ const Dashboard = ({ isDarkMode, userData }) => {
     console.log('Stats for chart:', stats);
     if (!stats || !stats.monthlyTrends || stats.monthlyTrends.length === 0) return null;
 
-    const last6Months = stats.monthlyTrends ? stats.monthlyTrends.slice(-6) : [];
+    const last6Months = stats.monthlyTrends ? stats.monthlyTrends.slice(-7) : [];
 
     return {
       labels: last6Months.map(trend => `${trend.month} ${trend.year}`),
