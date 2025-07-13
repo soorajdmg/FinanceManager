@@ -1,16 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sun, Moon, LogOut } from 'lucide-react';
+import { Sun, Moon, LogOut, User } from 'lucide-react';
 import './Navbar.css';
 
-const Navbar = ({ isDarkMode, setIsDarkMode }) => {
+const Navbar = ({ isDarkMode, setIsDarkMode, userData }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
-
-  // Sample user data - replace with your actual user data
-  const userData = {
-    name: "John Doe",
-    email: "john.doe@example.com"
-  };
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -20,11 +14,13 @@ const Navbar = ({ isDarkMode, setIsDarkMode }) => {
     setShowDropdown(!showDropdown);
   };
 
+  console.log("user: ", userData)
+
   const handleLogout = async () => {
     try {
       // Get the token from localStorage (adjust based on how you store it)
       const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-      
+
       // Make API call to logout endpoint
       const response = await fetch('/api/logout', {
         method: 'POST',
@@ -40,15 +36,15 @@ const Navbar = ({ isDarkMode, setIsDarkMode }) => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
         localStorage.removeItem('userData');
-        
+
         // Clear any other session data you might have
         sessionStorage.clear();
-        
+
         console.log('Logged out successfully');
-        
+
         // Redirect to login page or home page
         window.location.href = '/login'; // or use your router's navigation
-        
+
       } else {
         console.error('Logout failed:', response.statusText);
         // Even if server logout fails, clear local storage and redirect
@@ -67,7 +63,7 @@ const Navbar = ({ isDarkMode, setIsDarkMode }) => {
       localStorage.removeItem('userData');
       window.location.href = '/login';
     }
-    
+
     setShowDropdown(false);
   };
 
@@ -123,18 +119,18 @@ const Navbar = ({ isDarkMode, setIsDarkMode }) => {
             {/* User Avatar */}
             <div className="user-avatar" onClick={toggleDropdown} ref={dropdownRef}>
               <img
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
+                src={userData?.profilePicture || userData?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
                 alt="User Avatar"
                 className="avatar-image"
               />
               <div className="avatar-status"></div>
-              
+
               {/* Dropdown Menu */}
               {showDropdown && (
                 <div className="dropdown-menu">
                   <div className="dropdown-header">
-                    <div className="dropdown-name">{userData.name}</div>
-                    <div className="dropdown-email">{userData.email}</div>
+                    <div className="dropdown-name">{userData?.name || 'User'}</div>
+                    <div className="dropdown-email">{userData?.email || 'user@example.com'}</div>
                   </div>
                   <div className="dropdown-divider"></div>
                   <button className="dropdown-item logout-btn" onClick={handleLogout}>

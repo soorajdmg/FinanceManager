@@ -85,7 +85,7 @@ const PublicLayout = ({ children, isDarkMode }) => {
 };
 
 // Private Layout Component (with sidebar)
-const PrivateLayout = ({ children, isDarkMode, onDarkModeChange, activeSection, onNavigate }) => {
+const PrivateLayout = ({ children, isDarkMode, onDarkModeChange, activeSection, onNavigate, user }) => {
   return (
     <div className={`container ${isDarkMode ? 'dark-mode' : ''}`}>
       <Sidebar
@@ -97,6 +97,7 @@ const PrivateLayout = ({ children, isDarkMode, onDarkModeChange, activeSection, 
         <Navbar
           isDarkMode={isDarkMode}
           setIsDarkMode={onDarkModeChange}
+          userData={user || {}}  // Pass userData here
         />
         {children}
       </div>
@@ -180,6 +181,8 @@ const App = () => {
 
   // Handle authentication success (login or signup)
   const handleAuthSuccess = (token, userData = null) => {
+    console.log("pub Userdata: ", userData)
+
     console.log('Authentication successful, redirecting to dashboard...');
     login(token, userData);
     navigate('/dashboard');
@@ -220,6 +223,7 @@ const App = () => {
               onDarkModeChange={handleDarkModeChange}
               activeSection={getActiveSection()}
               onNavigate={handleNavigation}
+              user={user}
             >
               <Dashboard userData={user} />
             </PrivateLayout>
@@ -236,6 +240,7 @@ const App = () => {
               onDarkModeChange={handleDarkModeChange}
               activeSection={getActiveSection()}
               onNavigate={handleNavigation}
+              user={user}
             >
               <Transactions importedTransactions={importedTransactions} />
             </PrivateLayout>
@@ -252,6 +257,7 @@ const App = () => {
               onDarkModeChange={handleDarkModeChange}
               activeSection={getActiveSection()}
               onNavigate={handleNavigation}
+              user={user}
             >
               <Budget />
             </PrivateLayout>
@@ -268,6 +274,7 @@ const App = () => {
               onDarkModeChange={handleDarkModeChange}
               activeSection={getActiveSection()}
               onNavigate={handleNavigation}
+              user={user}
             >
               <Reports />
             </PrivateLayout>
@@ -284,6 +291,7 @@ const App = () => {
               onDarkModeChange={handleDarkModeChange}
               activeSection={getActiveSection()}
               onNavigate={handleNavigation}
+              user={user}
             >
               <DocumentUpload onTransactionsImported={handleTransactionsImported} />
             </PrivateLayout>
@@ -300,6 +308,7 @@ const App = () => {
               onDarkModeChange={handleDarkModeChange}
               activeSection={getActiveSection()}
               onNavigate={handleNavigation}
+              user={user}
             >
               <Profile />
             </PrivateLayout>
@@ -316,6 +325,7 @@ const App = () => {
               onDarkModeChange={handleDarkModeChange}
               activeSection={getActiveSection()}
               onNavigate={handleNavigation}
+              user={user}
             >
               <Settings />
             </PrivateLayout>
