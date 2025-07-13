@@ -133,7 +133,7 @@ const totalStatsSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'total_stats'
+    collection: 'totalStats'
 });
 
 // Virtual for net worth calculation
