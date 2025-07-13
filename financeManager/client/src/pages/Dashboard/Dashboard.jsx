@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, PieChart, Activity, ArrowUpRight, ArrowDownRight, Eye, MoreHorizontal, Car, Bus, Plane, Fuel, Dumbbell } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, PieChart, Activity, ArrowUpRight, ArrowDownRight, Eye, MoreHorizontal, Car, Bus, Plane, Fuel, Dumbbell, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import './Dashboard.css';
+
 
 // Move AnimatedPieChart outside of Dashboard component
 const AnimatedPieChart = ({ data, size = 200, isDarkMode }) => {
@@ -104,81 +105,296 @@ const AnimatedPieChart = ({ data, size = 200, isDarkMode }) => {
   );
 };
 
-const Dashboard = ({ isDarkMode }) => {
+const Dashboard = ({ isDarkMode, userId }) => {
   const incomeExpenseChartRef = useRef(null);
   const [chartInstances, setChartInstances] = useState({ line: null, pie: null });
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Dashboard data with refined presentation and card themes
-  const dashboardCards = [
-    {
-      title: 'Total Balance',
-      value: '$12,450.80',
-      change: '+8.2%',
-      changeText: 'from last month',
-      isPositive: true,
-      icon: DollarSign,
-      color: 'icon',
-    },
-    {
-      title: 'Savings Rate',
-      value: '26.2%',
-      change: '+2.1%',
-      changeText: 'from last month',
-      isPositive: true,
-      icon: PieChart,
-      color: 'violet',
-    },
-    {
-      title: 'Monthly Income',
-      value: '$5,200.00',
-      change: '+3.1%',
-      changeText: 'from last month',
-      isPositive: true,
-      icon: TrendingUp,
-      color: 'blue',
-    },
-    {
-      title: 'Monthly Expenses',
-      value: '$3,840.25',
-      change: '+12.5%',
-      changeText: 'from last month',
-      isPositive: false,
-      icon: TrendingDown,
-      color: 'amber',
-    }
-  ];
+  // Backend integration state
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const chartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Income',
-        data: [4800, 5200, 4900, 5400, 5100, 5200],
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        tension: 0.4,
-        fill: true,
-        pointRadius: 4,
-        pointBackgroundColor: '#10b981',
-        pointBorderColor: isDarkMode ? '#1e293b' : '#ffffff',
-        pointBorderWidth: 2,
-      },
-      {
-        label: 'Expenses',
-        data: [3200, 3600, 3400, 3900, 3700, 3840],
-        borderColor: '#ef4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        tension: 0.4,
-        fill: true,
-        pointRadius: 4,
-        pointBackgroundColor: '#ef4444',
-        pointBorderColor: isDarkMode ? '#1e293b' : '#ffffff',
-        pointBorderWidth: 2,
+  // API base URL - adjust according to your backend
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+  // Fetch stats from backend
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem('token'); // Adjust based on your auth implementation
+
+      const response = await fetch(`${API_BASE_URL}/stats/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    ]
+
+      const data = await response.json();
+      setStats(data);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Fetch category breakdown
+  const fetchCategoryBreakdown = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(`${API_BASE_URL}/stats/${userId}/categories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+    } catch (err) {
+      console.error('Error fetching category breakdown:', err);
+    }
+    return null;
+  };
+
+  // Refresh stats
+  const refreshStats = async () => {
+    try {
+      setRefreshing(true);
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(`${API_BASE_URL}/stats/${userId}/refresh`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        await fetchStats();
+      }
+    } catch (err) {
+      console.error('Error refreshing stats:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Initial data fetch
+  useEffect(() => {
+    if (userId) {
+      fetchStats();
+    }
+  }, [userId]);
+
+  // Generate dashboard cards from stats
+  const generateDashboardCards = () => {
+    if (!stats) return [];
+
+    const calculateChange = (current, previous) => {
+      if (!previous || previous === 0) return 0;
+      return ((current - previous) / previous) * 100;
+    };
+
+    return [
+      {
+        title: 'Total Balance',
+        value: `₹${stats.totalBalance?.toLocaleString() || '0.00'}`,
+        change: `${stats.monthlyGrowth?.netWorth >= 0 ? '+' : ''}${stats.monthlyGrowth?.netWorth?.toFixed(1) || '0.0'}%`,
+        changeText: 'from last month',
+        isPositive: (stats.monthlyGrowth?.netWorth || 0) >= 0,
+        icon: DollarSign,
+        color: 'icon',
+      },
+      {
+        title: 'Savings Rate',
+        value: `${stats.savingsRate?.toFixed(1) || '0.0'}%`,
+        change: `${stats.monthlyGrowth?.savings >= 0 ? '+' : ''}${stats.monthlyGrowth?.savings?.toFixed(1) || '0.0'}%`,
+        changeText: 'from last month',
+        isPositive: (stats.monthlyGrowth?.savings || 0) >= 0,
+        icon: PieChart,
+        color: 'violet',
+      },
+      {
+        title: 'Monthly Income',
+        value: `₹${stats.monthlyIncome?.toLocaleString() || '0.00'}`,
+        change: `${stats.monthlyGrowth?.income >= 0 ? '+' : ''}${stats.monthlyGrowth?.income?.toFixed(1) || '0.0'}%`,
+        changeText: 'from last month',
+        isPositive: (stats.monthlyGrowth?.income || 0) >= 0,
+        icon: TrendingUp,
+        color: 'blue',
+      },
+      {
+        title: 'Monthly Expenses',
+        value: `₹${stats.monthlyExpenses?.toLocaleString() || '0.00'}`,
+        change: `${stats.monthlyGrowth?.expenses >= 0 ? '+' : ''}${stats.monthlyGrowth?.expenses?.toFixed(1) || '0.0'}%`,
+        changeText: 'from last month',
+        isPositive: (stats.monthlyGrowth?.expenses || 0) < 0, // Negative expense growth is positive
+        icon: TrendingDown,
+        color: 'amber',
+      }
+    ];
+  };
+
+  // Generate chart data from stats
+  const generateChartData = () => {
+    if (!stats || !stats.monthlyTrends) return null;
+
+    const last6Months = stats.monthlyTrends.slice(-6);
+
+    return {
+      labels: last6Months.map(trend => `${trend.month} ${trend.year}`),
+      datasets: [
+        {
+          label: 'Income',
+          data: last6Months.map(trend => trend.income),
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: '#10b981',
+          pointBorderColor: isDarkMode ? '#1e293b' : '#ffffff',
+          pointBorderWidth: 2,
+        },
+        {
+          label: 'Expenses',
+          data: last6Months.map(trend => trend.expenses),
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          tension: 0.4,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: '#ef4444',
+          pointBorderColor: isDarkMode ? '#1e293b' : '#ffffff',
+          pointBorderWidth: 2,
+        }
+      ]
+    };
+  };
+
+  // Generate pie chart data from category spending
+  const generatePieChartData = () => {
+    if (!stats || !stats.categorySpending) return [];
+
+    const colors = ['blue', 'emerald', 'violet', 'amber', 'red'];
+
+    return stats.categorySpending.slice(0, 5).map((category, index) => ({
+      label: category.category,
+      amount: category.amount,
+      color: colors[index % colors.length]
+    }));
+  };
+
+  // Chart initialization
+  useEffect(() => {
+    if (!stats) return;
+
+    setIsLoaded(true);
+
+    const initChart = async () => {
+      if (typeof window.Chart === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js';
+        script.onload = () => {
+          createChart();
+        };
+        document.head.appendChild(script);
+      } else {
+        createChart();
+      }
+    };
+
+    const createChart = () => {
+      const chartData = generateChartData();
+      if (!chartData || !incomeExpenseChartRef.current) return;
+
+      // Destroy existing chart if it exists
+      if (chartInstances.line) {
+        chartInstances.line.destroy();
+      }
+
+      const ctx = incomeExpenseChartRef.current.getContext('2d');
+
+      const newChart = new window.Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0, 0, 0, 0.8)',
+              cornerRadius: 8,
+              callbacks: {
+                label: (context) => context.dataset.label + ': ₹' + context.parsed.y.toLocaleString()
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: isDarkMode ? '#94a3b8' : '#64748b' }
+            },
+            y: {
+              grid: { color: isDarkMode ? '#334155' : '#f1f5f9' },
+              ticks: {
+                color: isDarkMode ? '#94a3b8' : '#64748b',
+                callback: (value) => '₹' + (value / 1000) + 'k'
+              }
+            }
+          }
+        }
+      });
+
+      setChartInstances(prev => ({ ...prev, line: newChart }));
+    };
+
+    setTimeout(initChart, 100);
+  }, [stats, isDarkMode]);
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
+  const getColorClasses = (color) => {
+    const colors = {
+      emerald: 'icon-emerald',
+      blue: 'icon-blue',
+      amber: 'icon-amber',
+      violet: 'icon-violet',
+      icon: 'icon-default'
+    };
+    return colors[color] || colors.blue;
+  };
+
+  const getThemeClass = (theme) => {
+    const themes = {
+      'white': 'card-white'
+    };
+    return themes[theme] || themes.white;
+  };
+
+  // Mock transaction data (you can replace this with real transaction data from your backend)
   const recentTransactions = [
     {
       id: 1,
@@ -232,102 +448,73 @@ const Dashboard = ({ isDarkMode }) => {
     }
   ];
 
-  useEffect(() => {
-    setIsLoaded(true);
+  // Loading state
+  if (loading) {
+    return (
+      <div className={`dashboard-container ${isDarkMode ? 'dark' : ''}`}>
+        <div className="dashboard-padding">
+          <div className="dashboard-max-width">
+            <div className="loading-container">
+              <Loader2 className="loading-spinner" />
+              <p className="loading-text">Loading your financial data...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    const initChart = async () => {
-      // Import Chart.js differently
-      if (typeof window.Chart === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js';
-        script.onload = () => {
-          createChart();
-        };
-        document.head.appendChild(script);
-      } else {
-        createChart();
-      }
-    };
+  // Error state
+  if (error) {
+    return (
+      <div className={`dashboard-container ${isDarkMode ? 'dark' : ''}`}>
+        <div className="dashboard-padding">
+          <div className="dashboard-max-width">
+            <div className="error-container">
+              <AlertCircle className="error-icon" />
+              <p className="error-text">Error loading dashboard data: {error}</p>
+              <button
+                onClick={fetchStats}
+                className="retry-button"
+              >
+                <RefreshCw className="retry-icon" />
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    const createChart = () => {
-      if (incomeExpenseChartRef.current) {
-        // Destroy existing chart if it exists
-        if (chartInstances.line) {
-          chartInstances.line.destroy();
-        }
-
-        const ctx = incomeExpenseChartRef.current.getContext('2d');
-
-        const newChart = new window.Chart(ctx, {
-          type: 'line',
-          data: chartData,
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0, 0, 0, 0.8)',
-                cornerRadius: 8,
-                callbacks: {
-                  label: (context) => context.dataset.label + ': $' + context.parsed.y.toLocaleString()
-                }
-              }
-            },
-            scales: {
-              x: {
-                grid: { display: false },
-                ticks: { color: isDarkMode ? '#94a3b8' : '#64748b' }
-              },
-              y: {
-                grid: { color: isDarkMode ? '#334155' : '#f1f5f9' },
-                ticks: {
-                  color: isDarkMode ? '#94a3b8' : '#64748b',
-                  callback: (value) => '$' + (value / 1000) + 'k'
-                }
-              }
-            }
-          }
-        });
-
-        setChartInstances(prev => ({ ...prev, line: newChart }));
-      }
-    };
-    setTimeout(initChart, 100);
-  }, [isDarkMode]);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(amount);
-  };
-
-  const getColorClasses = (color) => {
-    const colors = {
-      emerald: 'icon-emerald',
-      blue: 'icon-blue',
-      amber: 'icon-amber',
-      violet: 'icon-violet'
-    };
-    return colors[color] || colors.blue;
-  };
-
-  const getThemeClass = (theme) => {
-    const themes = {
-      'white': 'card-white'
-    };
-    return themes[theme] || themes.white;
-  };
+  const dashboardCards = generateDashboardCards();
+  const pieChartData = generatePieChartData();
 
   return (
-    <div 
+    <div
       className={`dashboard-container ${isDarkMode ? 'dark' : ''} ${isLoaded ? 'loaded' : ''}`}
     >
       {/* Header Section */}
       <div className="dashboard-padding">
         <div className="dashboard-max-width">
+          {/* Header with refresh button */}
+          <div className="dashboard-header">
+            <div>
+              <h1 className="dashboard-title">Financial Dashboard</h1>
+              <p className="dashboard-subtitle">
+                Last updated: {stats?.lastCalculated ? new Date(stats.lastCalculated).toLocaleDateString() : 'Never'}
+              </p>
+            </div>
+            <button
+              onClick={refreshStats}
+              disabled={refreshing}
+              className="refresh-button"
+            >
+              <RefreshCw className={`refresh-icon ${refreshing ? 'spinning' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+
           {/* Stats Cards */}
           <div className="stats-grid">
             {dashboardCards.map((card, index) => {
@@ -371,7 +558,7 @@ const Dashboard = ({ isDarkMode }) => {
               <div className="chart-header">
                 <div className="chart-title-section">
                   <h3 className="chart-title">Income vs Expenses</h3>
-                  <p className="chart-subtitle">Last 6 months performance</p>
+                  <p className="chart-subtitle">Monthly trends</p>
                 </div>
                 <div className="chart-legend">
                   <div className="legend-item">
@@ -394,29 +581,19 @@ const Dashboard = ({ isDarkMode }) => {
             <div className="chart-card chart-secondary">
               <div className="chart-header-simple">
                 <h3 className="chart-title">Expense Categories</h3>
-                <p className="chart-subtitle">This month breakdown</p>
+                <p className="chart-subtitle">Current breakdown</p>
               </div>
 
               <div className="pie-chart-wrapper">
                 <AnimatedPieChart
-                  data={[
-                    { label: 'Housing', amount: 1200, color: 'blue' },
-                    { label: 'Food', amount: 450, color: 'emerald' },
-                    { label: 'Transport', amount: 320, color: 'violet' },
-                    { label: 'Utilities', amount: 180, color: 'amber' }
-                  ]}
+                  data={pieChartData}
                   size={160}
                   isDarkMode={isDarkMode}
                 />
               </div>
 
               <div className="expense-breakdown">
-                {[
-                  { label: 'Housing', amount: 1200, color: 'blue' },
-                  { label: 'Food', amount: 450, color: 'emerald' },
-                  { label: 'Transport', amount: 320, color: 'violet' },
-                  { label: 'Utilities', amount: 180, color: 'amber' }
-                ].map((item, index) => (
+                {pieChartData.map((item, index) => (
                   <div key={index} className="expense-item">
                     <div className="expense-info">
                       <div className={`expense-dot ${item.color}`}></div>
@@ -429,7 +606,7 @@ const Dashboard = ({ isDarkMode }) => {
             </div>
           </div>
 
-          {/* Recent Transactions - Updated to match screenshot */}
+          {/* Recent Transactions */}
           <div className="transactions-card-new">
             <div className="transactions-header-new">
               <h3 className="transactions-title-new">Recent transactions</h3>
@@ -464,7 +641,7 @@ const Dashboard = ({ isDarkMode }) => {
 
                       <div className="transaction-right-new">
                         <p className="transaction-amount-new">
-                          ${transaction.amount.toFixed(2)}
+                          ₹{transaction.amount.toFixed(2)}
                         </p>
                         <MoreHorizontal className="transaction-more-icon" />
                       </div>

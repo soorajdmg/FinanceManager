@@ -1,5 +1,31 @@
 const mongoose = require('mongoose');
 
+// Helper function to format month as "January25" format
+const formatMonthYear = (year, month) => {
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const yearSuffix = year.toString().slice(-2);
+    return `${monthNames[month - 1]}${yearSuffix}`;
+};
+
+// Helper function to parse "January25" format back to year and month
+const parseMonthYear = (monthYearString) => {
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    const yearSuffix = monthYearString.slice(-2);
+    const monthName = monthYearString.slice(0, -2);
+    
+    const year = parseInt(`20${yearSuffix}`);
+    const month = monthNames.indexOf(monthName) + 1;
+    
+    return { year, month };
+};
+
 // Monthly Stats - One document per user per month
 const monthlyStatsSchema = new mongoose.Schema({
     userId: {
@@ -16,6 +42,11 @@ const monthlyStatsSchema = new mongoose.Schema({
         required: true,
         min: 1,
         max: 12
+    },
+    // New field for formatted month-year
+    monthYear: {
+        type: String,
+        required: true
     },
 
     // Income breakdown
@@ -101,13 +132,22 @@ const monthlyStatsSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'monthly_stats'
+    collection: 'monthlyStats'
 });
 
 // Indexes for better performance
 monthlyStatsSchema.index({ userId: 1, year: 1, month: 1 }, { unique: true });
+monthlyStatsSchema.index({ userId: 1, monthYear: 1 }, { unique: true });
 monthlyStatsSchema.index({ userId: 1, year: -1, month: -1 });
 monthlyStatsSchema.index({ calculatedAt: -1 });
+
+// Pre-save middleware to auto-generate monthYear
+monthlyStatsSchema.pre('save', function(next) {
+    if (this.year && this.month) {
+        this.monthYear = formatMonthYear(this.year, this.month);
+    }
+    next();
+});
 
 // Utility function to safely calculate savings rate
 const calculateSavingsRate = (income, expenses) => {
@@ -123,6 +163,7 @@ monthlyStatsSchema.statics.calculateMonthlyStats = async function (userId, year,
 
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
+    const monthYear = formatMonthYear(year, month);
 
     const stats = await Transaction.aggregate([
         {
@@ -158,6 +199,7 @@ monthlyStatsSchema.statics.calculateMonthlyStats = async function (userId, year,
             userId: new mongoose.Types.ObjectId(userId),
             year,
             month,
+            monthYear,
             totalIncome: 0,
             totalExpenses: 0,
             netIncome: 0,
@@ -208,6 +250,7 @@ monthlyStatsSchema.statics.calculateMonthlyStats = async function (userId, year,
         userId: new mongoose.Types.ObjectId(userId),
         year,
         month,
+        monthYear,
         totalIncome,
         totalExpenses,
         netIncome: totalIncome - totalExpenses,
@@ -239,6 +282,12 @@ monthlyStatsSchema.statics.getUserMonthlyHistory = async function (userId, month
     );
 };
 
+// Method to get specific month stats by monthYear string
+monthlyStatsSchema.statics.getMonthStatsByMonthYear = async function (userId, monthYearString) {
+    const { year, month } = parseMonthYear(monthYearString);
+    return await this.getMonthStats(userId, year, month);
+};
+
 // Method to get specific month stats
 monthlyStatsSchema.statics.getMonthStats = async function (userId, year, month) {
     let stats = await this.findOne({ userId: new mongoose.Types.ObjectId(userId), year, month });
@@ -259,6 +308,10 @@ monthlyStatsSchema.statics.getCurrentMonthStats = async function (userId) {
 
     return await this.getMonthStats(userId, year, month);
 };
+
+// Add helper methods to the schema
+monthlyStatsSchema.statics.formatMonthYear = formatMonthYear;
+monthlyStatsSchema.statics.parseMonthYear = parseMonthYear;
 
 const MonthlyStats = mongoose.model('MonthlyStats', monthlyStatsSchema);
 
