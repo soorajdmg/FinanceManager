@@ -251,7 +251,7 @@ const Transaction = () => {
                             </div>
 
                             <button
-                                className={`filter-button ${showFilters ? 'active' : ''}`}
+                                className={`txnfilter-button ${showFilters ? 'active' : ''}`}
                                 onClick={() => setShowFilters(!showFilters)}
                             >
                                 <Filter className="filter-icon" />
