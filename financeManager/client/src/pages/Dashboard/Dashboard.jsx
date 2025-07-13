@@ -136,7 +136,65 @@ const Dashboard = ({ isDarkMode, userData }) => {
       setError(null);
 
       const token = localStorage.getItem('authToken');
-      const requestUrl = `${API_BASE_URL}/stats/${userId}/summary?month=${month}`;
+      const [year, monthNum] = month.split('-');
+      const requestUrl = `${API_BASE_URL}/stats/${userId}/month/${year}/${monthNum}`;
+
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 401) {
+        const errorText = await response.text();
+        throw new Error(`Unauthorized: ${errorText}`);
+      }
+
+      const response_data = await response.json();
+      console.log("response data: ", response_data)
+      setStats(response_data.data);
+
+      const isEmpty = !response_data.data ||
+        (response_data.data.endingBalance === 0 &&
+          response_data.data.netIncome === 0 &&
+          response_data.data.totalExpenses === 0 &&
+          (!response_data.data.incomeByCategory || response_data.data.incomeByCategory.length === 0));
+
+      setHasData(!isEmpty);
+
+    } catch (err) {
+      console.error('Error fetching monthly stats:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+    if (period === 'total') {
+      fetchTotalStats(); // This should fetch total stats
+    } else {
+      fetchMonthlyStats(selectedMonth); // This fetches monthly stats
+    }
+  };
+
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+    if (selectedPeriod === 'month') {
+      fetchMonthlyStats(month);
+    }
+  };
+
+  const fetchTotalStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem('authToken');
+      const requestUrl = `${API_BASE_URL}/stats/${userId}`;
 
       const response = await fetch(requestUrl, {
         method: 'GET',
@@ -157,32 +215,15 @@ const Dashboard = ({ isDarkMode, userData }) => {
       const isEmpty = !response_data.data ||
         (response_data.data.availableBalance === 0 &&
           response_data.data.thisMonthIncome === 0 &&
-          response_data.data.thisMonthExpenses === 0 &&
-          (!response_data.data.categorySpending || response_data.data.categorySpending.length === 0));
+          response_data.data.thisMonthExpenses === 0);
 
       setHasData(!isEmpty);
 
     } catch (err) {
-      console.error('Error fetching monthly stats:', err);
+      console.error('Error fetching total stats:', err);
       setError(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handlePeriodChange = (period) => {
-    setSelectedPeriod(period);
-    if (period === 'total') {
-      fetchStats();
-    } else {
-      fetchMonthlyStats(selectedMonth);
-    }
-  };
-
-  const handleMonthChange = (month) => {
-    setSelectedMonth(month);
-    if (selectedPeriod === 'month') {
-      fetchMonthlyStats(month);
     }
   };
 
@@ -278,6 +319,27 @@ const Dashboard = ({ isDarkMode, userData }) => {
     return null;
   };
 
+  const fetchMonthlyCategoryBreakdown = async (month) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const [year, monthNum] = month.split('-');
+      const response = await fetch(`${API_BASE_URL}/stats/${userId}/month/${year}/${monthNum}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data.categorySpending || [];
+      }
+    } catch (err) {
+      console.error('Error fetching monthly category breakdown:', err);
+    }
+    return [];
+  };
+
   // Fetch total category breakdown (not just monthly)
   const fetchTotalCategoryBreakdown = async () => {
     try {
@@ -304,9 +366,13 @@ const Dashboard = ({ isDarkMode, userData }) => {
   useEffect(() => {
     if (userId) {
       const loadDashboardData = async () => {
-        await fetchStats();
+        if (selectedPeriod === 'total') {
+          await fetchTotalStats();
+        } else {
+          await fetchMonthlyStats(selectedMonth);
+        }
 
-        // Fetch monthly trends and update stats
+        // Always fetch these for charts regardless of selected period
         const trends = await fetchMonthlyTrends();
         if (trends) {
           setStats(prevStats => ({
@@ -315,7 +381,6 @@ const Dashboard = ({ isDarkMode, userData }) => {
           }));
         }
 
-        // Fetch total category breakdown for pie chart
         const totalCategories = await fetchTotalCategoryBreakdown();
         if (totalCategories) {
           setStats(prevStats => ({
@@ -327,55 +392,99 @@ const Dashboard = ({ isDarkMode, userData }) => {
 
       loadDashboardData();
     }
-  }, [userId]);
+  }, [userId, selectedPeriod, selectedMonth]);
 
   // Generate dashboard cards from stats
   const generateDashboardCards = () => {
     if (!stats) return [];
     console.log("Stats: ", stats)
 
-    return [
-      {
-        title: 'Current Balance',
-        value: `₹${stats.availableBalance?.toLocaleString() || '0.00'}`,
-        change: `0.0%`, // You don't have monthlyGrowth data
-        changeText: 'from last month',
-        isPositive: true,
-        icon: DollarSign,
-        color: 'icon',
-      },
-      {
-        title: 'Savings Rate',
-        value: `${stats.savingsRate?.toFixed(1) || '0.0'}%`,
-        change: `0.0%`, // You don't have monthlyGrowth data
-        changeText: 'from last month',
-        isPositive: (stats.savingsRate || 0) >= 0,
-        icon: PieChart,
-        color: 'violet',
-      },
-      {
-        title: 'Monthly Income',
-        value: `₹${stats.thisMonthIncome?.toLocaleString() || '0.00'}`,
-        change: `0.0%`, // You don't have monthlyGrowth data
-        changeText: 'from last month',
-        isPositive: true,
-        icon: TrendingUp,
-        color: 'blue',
-      },
-      {
-        title: 'Monthly Expenses',
-        value: `₹${stats.thisMonthExpenses?.toLocaleString() || '0.00'}`,
-        change: `0.0%`, // You don't have monthlyGrowth data
-        changeText: 'from last month',
-        isPositive: false,
-        icon: TrendingDown,
-        color: 'amber',
-      }
-    ];
+    if (selectedPeriod === 'total') {
+      // Total stats view
+      return [
+        {
+          title: 'Current Balance',
+          value: `₹${stats.currentBalance?.toLocaleString() || '0.00'}`,
+          change: `0.0%`,
+          changeText: 'overall balance',
+          isPositive: true,
+          icon: DollarSign,
+          color: 'icon',
+        },
+        {
+          title: 'Savings Rate',
+          value: `${stats.savingsRate?.toFixed(1) || '0.0'}%`,
+          change: `0.0%`,
+          changeText: 'overall rate',
+          isPositive: (stats.savingsRate || 0) >= 0,
+          icon: PieChart,
+          color: 'violet',
+        },
+        {
+          title: 'Avg Monthly Income',
+          value: `₹${stats.avgMonthlyIncome?.toLocaleString() || '0.00'}`,
+          change: `0.0%`,
+          changeText: 'average income',
+          isPositive: true,
+          icon: TrendingUp,
+          color: 'blue',
+        },
+        {
+          title: 'Avg Monthly Expenses',
+          value: `₹${stats.avgMonthlyExpenses?.toLocaleString() || '0.00'}`,
+          change: `0.0%`,
+          changeText: 'average expenses',
+          isPositive: false,
+          icon: TrendingDown,
+          color: 'amber',
+        }
+      ];
+    } else {
+      // Monthly stats view
+      return [
+        {
+          title: 'Available Balance',
+          value: `₹${stats.endingBalance?.toLocaleString() || '0.00'}`,
+          change: `0.0%`,
+          changeText: 'from last month',
+          isPositive: true,
+          icon: DollarSign,
+          color: 'icon',
+        },
+        {
+          title: 'Savings Rate',
+          value: `${stats.savingsRate?.toFixed(1) || '0.0'}%`,
+          change: `0.0%`,
+          changeText: 'from last month',
+          isPositive: (stats.savingsRate || 0) >= 0,
+          icon: PieChart,
+          color: 'violet',
+        },
+        {
+          title: 'Monthly Income',
+          value: `₹${stats.totalIncome?.toLocaleString() || '0.00'}`,
+          change: `0.0%`,
+          changeText: 'from last month',
+          isPositive: true,
+          icon: TrendingUp,
+          color: 'blue',
+        },
+        {
+          title: 'Monthly Expenses',
+          value: `₹${stats.totalExpenses?.toLocaleString() || '0.00'}`,
+          change: `0.0%`,
+          changeText: 'from last month',
+          isPositive: false,
+          icon: TrendingDown,
+          color: 'amber',
+        }
+      ];
+    }
   };
 
   // Generate chart data from stats
   const generateChartData = () => {
+    // Always use total stats for chart data
     console.log('Stats for chart:', stats);
     if (!stats || !stats.monthlyTrends || stats.monthlyTrends.length === 0) return null;
 
@@ -414,11 +523,14 @@ const Dashboard = ({ isDarkMode, userData }) => {
 
   // Generate pie chart data from category spending
   const generatePieChartData = () => {
-    if (!stats || !stats.totalCategorySpending || !stats.totalCategorySpending.categories) return [];
+    // Always use total category spending for pie chart
+    const categoryData = stats?.totalCategorySpending?.categories || stats?.totalCategorySpending;
+
+    if (!categoryData || categoryData.length === 0) return [];
 
     const colors = ['blue', 'emerald', 'violet', 'amber', 'pink'];
 
-    return stats.totalCategorySpending.categories.slice(0, 5).map((category, index) => ({
+    return categoryData.slice(0, 5).map((category, index) => ({
       label: category.category,
       amount: category.amount,
       color: colors[index % colors.length]
@@ -610,7 +722,7 @@ const Dashboard = ({ isDarkMode, userData }) => {
             <div className="no-data-container">
               <div className="no-data-content">
                 <PieChart className="no-data-icon" />
-                <h3 className="no-data-title">No data found for this month</h3>
+                <h3 className="no-data-title">No data found for this filter</h3>
                 <p className="no-data-subtitle">
                   Upload the bank statement to get insights
                 </p>
