@@ -5,7 +5,6 @@ import {
   Shield,
   Globe,
   Database,
-  Download,
   Trash2,
   Eye,
   EyeOff,
@@ -13,12 +12,12 @@ import {
   ChevronRight,
   Mail,
   Phone,
-  Building,
   Calendar,
   Clock,
+  Camera,
+  Upload,
+  X,
   BarChart3,
-  FileText,
-  Zap
 } from 'lucide-react';
 import './settings.css';
 
@@ -32,6 +31,8 @@ const Settings = () => {
     email: 'soorajmurugaraj@gmail.com',
     phone: '+91 9846249930',
     company: '',
+    profilePicture: null,
+    profilePicturePreview: null,
     notifications: {
       email: true,
       push: false,
@@ -75,6 +76,29 @@ const Settings = () => {
     }, 1500);
   };
 
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFormData(prev => ({
+          ...prev,
+          profilePicture: file,
+          profilePicturePreview: e.target.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeProfilePicture = () => {
+    setFormData(prev => ({
+      ...prev,
+      profilePicture: null,
+      profilePicturePreview: null
+    }));
+  };
+
   const settingsNavigation = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -101,8 +125,8 @@ const Settings = () => {
                       className={`settings-nav-item ${activeSection === item.id ? 'active' : ''}`}
                     >
                       <div className="settings-nav-item-content">
-                        <Icon className="nav-icon" />
-                        <span className="nav-label">{item.label}</span>
+                        <Icon className="settingsNav-icon" />
+                        <span className="settingsNav-label">{item.label}</span>
                       </div>
                       <ChevronRight className="nav-arrow" />
                     </button>
@@ -113,7 +137,6 @@ const Settings = () => {
 
             {/* Content Area */}
             <div className="settings-content">
-              {/* Profile Section */}
               {activeSection === 'profile' && (
                 <div className="content-section">
                   <div className="section-header">
@@ -121,6 +144,65 @@ const Settings = () => {
                   </div>
 
                   <div className="settings-card">
+                    {/* Profile Picture Section */}
+                    <div className="profile-picture-section">
+                      <div className="profile-picture-container">
+                        <div className="profile-picture-wrapper">
+                          {formData.profilePicturePreview ? (
+                            <>
+                              <img
+                                src={formData.profilePicturePreview}
+                                alt="Profile"
+                                className="profile-picture"
+                              />
+                              <button
+                                type="button"
+                                className="remove-picture-btn"
+                                onClick={removeProfilePicture}
+                              >
+                                <X />
+                              </button>
+                            </>
+                          ) : (
+                            <div className="profile-picture-placeholder">
+                              <div className="placeholder-icon">
+                                <User />
+                              </div>
+                            </div>
+                          )}
+                          <div className="profile-picture-overlay">
+                            <Camera />
+                          </div>
+                        </div>
+                        <input
+                          type="file"
+                          id="profile-picture-input"
+                          accept="image/*"
+                          onChange={handleProfilePictureChange}
+                          className="profile-picture-input"
+                        />
+                      </div>
+                      <div className="profile-picture-info">
+                        <h4 className="profile-picture-title">Profile Picture</h4>
+                        <div className="profile-picture-actions">
+                          <label htmlFor="profile-picture-input" className="upload-btn">
+                            <Upload className="upload-icon" />
+                            Upload Photo
+                          </label>
+                          {formData.profilePicturePreview && (
+                            <button
+                              type="button"
+                              className="remove-btn"
+                              onClick={removeProfilePicture}
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Existing Form Grid */}
                     <div className="form-grid">
                       <div className="form-group">
                         <label className="form-label">First Name</label>
@@ -164,23 +246,10 @@ const Settings = () => {
                           onChange={(e) => handleInputChange('phone', e.target.value)}
                         />
                       </div>
-                      {/* <div className="form-group">
-                        <label className="form-label">
-                          <Building className="label-icon" />
-                          Company
-                        </label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={formData.company}
-                          onChange={(e) => handleInputChange('company', e.target.value)}
-                        />
-                      </div> */}
                     </div>
                   </div>
                 </div>
               )}
-
               {/* Notifications Section */}
               {activeSection === 'notifications' && (
                 <div className="content-section">
