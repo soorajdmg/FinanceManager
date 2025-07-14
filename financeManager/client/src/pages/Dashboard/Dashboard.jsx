@@ -125,7 +125,21 @@ const Dashboard = ({ isDarkMode, userData }) => {
   const [refreshing, setRefreshing] = useState(false);
 
 
-  const userId = userData.id
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, []);
+
+  const userId = user?.id;
 
   // API base URL - adjust according to your backend
   const API_BASE_URL = 'http://localhost:5000/api';

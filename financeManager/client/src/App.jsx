@@ -94,11 +94,7 @@ const PrivateLayout = ({ children, isDarkMode, onDarkModeChange, activeSection, 
         isDarkMode={isDarkMode}
       />
       <div className="main-content">
-        <Navbar
-          isDarkMode={isDarkMode}
-          setIsDarkMode={onDarkModeChange}
-          userData={user || {}}  // Pass userData here
-        />
+        <Navbar isDarkMode={isDarkMode} setIsDarkMode={onDarkModeChange} />
         {children}
       </div>
     </div>
@@ -225,7 +221,7 @@ const App = () => {
               onNavigate={handleNavigation}
               user={user}
             >
-              <Dashboard userData={user} />
+              <Dashboard userData={user || {}} />
             </PrivateLayout>
           </ProtectedRoute>
         }
