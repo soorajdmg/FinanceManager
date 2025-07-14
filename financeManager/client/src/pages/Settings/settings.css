@@ -482,41 +482,64 @@
     gap: 0.5rem;
 }
 
-/* Data Management */
-.data-actions {
-    display: flex;
-    flex-direction: column;
+/* Enhanced Privacy Section Styles */
+.security-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.privacy-controls-grid {
+    display: grid;
     gap: 1.5rem;
 }
 
-.data-action-item {
+.privacy-control-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 1.5rem;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.data-action-item:hover {
+.privacy-control-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(46, 51, 91, 0.03), transparent);
+    transition: left 0.6s ease;
+}
+
+.privacy-control-item:hover::before {
+    left: 100%;
+}
+
+.privacy-control-item:hover {
     background: #f1f5f9;
     border-color: #cbd5e1;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
-.data-action-info {
+.privacy-control-header {
     display: flex;
     align-items: center;
     gap: 1rem;
     flex: 1;
 }
 
-.data-action-icon {
-    width: 3rem;
-    height: 3rem;
+.privacy-control-icon {
+    width: 2.5rem;
+    height: 2.5rem;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 0.75rem;
@@ -525,26 +548,140 @@
     justify-content: center;
     color: #64748b;
     flex-shrink: 0;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
-.data-action-item:hover .data-action-icon {
-    background: #e2e8f0;
+.privacy-control-item:hover .privacy-control-icon {
+    background: rgba(46, 51, 91, 0.05);
     color: rgba(46, 51, 91, 0.841);
+    transform: scale(1.05);
 }
 
-.data-action-content h4 {
+.privacy-control-info h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 0.5rem 0;
+}
+
+.privacy-control-info p {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Two-Factor Authentication Section */
+.two-factor-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.two-factor-section:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.two-factor-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.two-factor-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.two-factor-icon {
+    width: 3rem;
+    height: 3rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #059669;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.two-factor-item:hover .two-factor-icon {
+    background: #ecfdf5;
+    color: #047857;
+    transform: scale(1.05);
+}
+
+.two-factor-content h4 {
     font-size: 1.125rem;
     font-weight: 600;
     color: #0f172a;
     margin: 0 0 0.25rem 0;
 }
 
-.data-action-content p {
+.two-factor-content p {
     font-size: 0.875rem;
     color: #64748b;
     margin: 0;
     line-height: 1.4;
+}
+
+/* Enhanced password input styling */
+.password-input-wrapper {
+    position: relative;
+}
+
+.password-input-wrapper .form-input {
+    padding-right: 3rem;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #64748b;
+    transition: all 0.2s ease;
+    border-radius: 0.25rem;
+}
+
+.password-toggle:hover {
+    color: rgba(46, 51, 91, 0.841);
+    background: #f1f5f9;
+}
+
+/* Responsive adjustments for privacy section */
+@media (max-width: 768px) {
+    .security-options {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .privacy-control-item,
+    .two-factor-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .privacy-control-header {
+        width: 100%;
+    }
+
+    .two-factor-info {
+        width: 100%;
+    }
 }
 
 /* Account Management */
@@ -805,8 +942,7 @@
         gap: 1rem;
     }
 
-    .data-action-item,
-    .notification-item,
+    .notification-item
     .privacy-item {
         flex-direction: column;
         align-items: flex-start;

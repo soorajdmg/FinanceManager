@@ -80,8 +80,7 @@ const Settings = () => {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'privacy', label: 'Privacy & Security', icon: Shield },
     { id: 'preferences', label: 'Preferences', icon: Globe },
-    { id: 'data', label: 'Data Management', icon: Database },
-    { id: 'account', label: 'Account', icon: Trash2 }
+    // { id: 'account', label: 'Account', icon: Trash2 }
   ];
 
   return (
@@ -165,7 +164,7 @@ const Settings = () => {
                           onChange={(e) => handleInputChange('phone', e.target.value)}
                         />
                       </div>
-                      <div className="form-group">
+                      {/* <div className="form-group">
                         <label className="form-label">
                           <Building className="label-icon" />
                           Company
@@ -176,7 +175,7 @@ const Settings = () => {
                           value={formData.company}
                           onChange={(e) => handleInputChange('company', e.target.value)}
                         />
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
@@ -230,46 +229,6 @@ const Settings = () => {
                           <span className="toggle-slider"></span>
                         </label>
                       </div>
-
-                      <div className="notification-item">
-                        <div className="notification-info">
-                          <div className="settings-notification-icon">
-                            <FileText />
-                          </div>
-                          <div className="notification-content">
-                            <h4>Analysis Reports</h4>
-                            <p>Weekly reports about your website performance</p>
-                          </div>
-                        </div>
-                        <label className="toggle-switch">
-                          <input
-                            type="checkbox"
-                            checked={formData.notifications.reports}
-                            onChange={(e) => handleNestedChange('notifications', 'reports', e.target.checked)}
-                          />
-                          <span className="toggle-slider"></span>
-                        </label>
-                      </div>
-
-                      <div className="notification-item">
-                        <div className="notification-info">
-                          <div className="settings-notification-icon">
-                            <Zap />
-                          </div>
-                          <div className="notification-content">
-                            <h4>Security Alerts</h4>
-                            <p>Immediate notifications for security issues</p>
-                          </div>
-                        </div>
-                        <label className="toggle-switch">
-                          <input
-                            type="checkbox"
-                            checked={formData.notifications.alerts}
-                            onChange={(e) => handleNestedChange('notifications', 'alerts', e.target.checked)}
-                          />
-                          <span className="toggle-slider"></span>
-                        </label>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -285,48 +244,54 @@ const Settings = () => {
                   <div className="settings-card">
                     <div className="privacy-section">
                       <h3 className="subsection-title">Account Security</h3>
-                      <div className="form-group">
-                        <label className="form-label">Current Password</label>
-                        <div className="password-input-wrapper">
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            className="form-input"
-                            placeholder="Enter current password"
-                          />
-                          <button
-                            type="button"
-                            className="password-toggle"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? <EyeOff /> : <Eye />}
-                          </button>
+                      <div className="security-options">
+                        <div className="form-group">
+                          <label className="form-label">
+                            Current Password
+                          </label>
+                          <div className="password-input-wrapper">
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              className="form-input"
+                              placeholder="Enter current password"
+                            />
+                            <button
+                              type="button"
+                              className="password-toggle"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <EyeOff /> : <Eye />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            New Password
+                          </label>
+                          <div className="password-input-wrapper">
+                            <input
+                              type="password"
+                              className="form-input"
+                              placeholder="Enter new password"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     <div className="privacy-section">
                       <h3 className="subsection-title">Privacy Controls</h3>
-                      <div className="privacy-list">
-                        <div className="privacy-item">
-                          <div className="privacy-info">
-                            <h4>Profile Visibility</h4>
-                            <p>Control who can see your profile information</p>
-                          </div>
-                          <select
-                            className="form-select"
-                            value={formData.privacy.profileVisibility}
-                            onChange={(e) => handleNestedChange('privacy', 'profileVisibility', e.target.value)}
-                          >
-                            <option value="public">Public</option>
-                            <option value="private">Private</option>
-                            <option value="team">Team Only</option>
-                          </select>
-                        </div>
-
-                        <div className="privacy-item">
-                          <div className="privacy-info">
-                            <h4>Data Sharing</h4>
-                            <p>Allow anonymous usage data to improve our services</p>
+                      <div className="privacy-controls-grid">
+                        <div className="privacy-control-item">
+                          <div className="privacy-control-header">
+                            <div className="privacy-control-icon">
+                              <Database />
+                            </div>
+                            <div className="privacy-control-info">
+                              <h4>Data Sharing</h4>
+                              <p>Allow anonymous usage data to improve our services</p>
+                            </div>
                           </div>
                           <label className="toggle-switch">
                             <input
@@ -338,10 +303,15 @@ const Settings = () => {
                           </label>
                         </div>
 
-                        <div className="privacy-item">
-                          <div className="privacy-info">
-                            <h4>Analytics Tracking</h4>
-                            <p>Enable detailed analytics for better insights</p>
+                        <div className="privacy-control-item">
+                          <div className="privacy-control-header">
+                            <div className="privacy-control-icon">
+                              <BarChart3 />
+                            </div>
+                            <div className="privacy-control-info">
+                              <h4>Analytics Tracking</h4>
+                              <p>Enable AI analytics for better insights</p>
+                            </div>
                           </div>
                           <label className="toggle-switch">
                             <input
@@ -354,6 +324,27 @@ const Settings = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* <div className="privacy-section">
+                      <h3 className="subsection-title">Two-Factor Authentication</h3>
+                      <div className="two-factor-section">
+                        <div className="two-factor-item">
+                          <div className="two-factor-info">
+                            <div className="two-factor-icon">
+                              <Shield />
+                            </div>
+                            <div className="two-factor-content">
+                              <h4>Authenticator App</h4>
+                              <p>Use an authenticator app to generate secure codes</p>
+                            </div>
+                          </div>
+                          <button className="action-button secondary">
+                            <Shield className="button-icon" />
+                            Setup
+                          </button>
+                        </div>
+                      </div>
+                    </div> */}
                   </div>
                 </div>
               )}
@@ -437,52 +428,6 @@ const Settings = () => {
                   </div>
                 </div>
               )}
-
-              {/* Data Management Section */}
-              {activeSection === 'data' && (
-                <div className="content-section">
-                  <div className="section-header">
-                    <h2 className="section-title">Data Management</h2>
-                  </div>
-
-                  <div className="settings-card">
-                    <div className="data-actions">
-                      <div className="data-action-item">
-                        <div className="data-action-info">
-                          <div className="data-action-icon">
-                            <Download />
-                          </div>
-                          <div className="data-action-content">
-                            <h4>Export Data</h4>
-                            <p>Download all your website analysis data and reports</p>
-                          </div>
-                        </div>
-                        <button className="action-button secondary">
-                          <Download className="button-icon" />
-                          Export
-                        </button>
-                      </div>
-
-                      <div className="data-action-item">
-                        <div className="data-action-info">
-                          <div className="data-action-icon">
-                            <Database />
-                          </div>
-                          <div className="data-action-content">
-                            <h4>Data Retention</h4>
-                            <p>View and manage how long we keep your data</p>
-                          </div>
-                        </div>
-                        <button className="action-button secondary">
-                          <Database className="button-icon" />
-                          Manage
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Account Section */}
               {activeSection === 'account' && (
                 <div className="content-section">
