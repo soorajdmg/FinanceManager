@@ -79,7 +79,7 @@ const Profile = () => {
                     />
                   ) : (
                     <div className="profile-avatar-placeholder">
-                      <User className="avatar-icon" />
+                      <User className="prAvatar-icon" />
                     </div>
                   )}
                   <button className="avatar-edit-btn" onClick={() => document.getElementById('avatar-upload').click()}>

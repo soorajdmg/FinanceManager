@@ -118,11 +118,17 @@ const Navbar = ({ isDarkMode, setIsDarkMode, userData }) => {
             </div>
             {/* User Avatar */}
             <div className="user-avatar" onClick={toggleDropdown} ref={dropdownRef}>
-              <img
-                src={userData?.profilePicture || userData?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
-                alt="User Avatar"
-                className="avatar-image"
-              />
+              {userData?.profilePicture || userData?.avatar ? (
+                <img
+                  src={userData?.profilePicture || userData?.avatar}
+                  alt="User Avatar"
+                  className="avatar-image"
+                />
+              ) : (
+                <div className="avatar-icon">
+                  <User size={16} />
+                </div>
+              )}
               <div className="avatar-status"></div>
 
               {/* Dropdown Menu */}
