@@ -63,6 +63,7 @@ const register = async (req, res) => {
           name: newUser.name,
           email: newUser.email,
           preferences: newUser.preferences,
+          profilePicture: newUser.profilePicture,
           createdAt: newUser.createdAt
         },
         token
@@ -125,6 +126,7 @@ const login = async (req, res) => {
           name: user.name,
           email: user.email,
           preferences: user.preferences,
+          profilePicture: user.profilePicture,
           createdAt: user.createdAt
         },
         token
@@ -162,7 +164,7 @@ const logout = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -178,6 +180,7 @@ const getProfile = async (req, res) => {
           name: user.name,
           email: user.email,
           preferences: user.preferences,
+          profilePicture: user.profilePicture,
           createdAt: user.createdAt
         }
       }
@@ -195,12 +198,13 @@ const getProfile = async (req, res) => {
 // Update user profile
 const updateProfile = async (req, res) => {
   try {
-    const { name, theme } = req.body;
+    const { name, theme, profilePicture } = req.body;
     const userId = req.userId;
 
     const updateData = {};
     if (name) updateData.name = name;
     if (theme) updateData['preferences.theme'] = theme;
+    if (profilePicture) updateData.profilePicture = profilePicture;
 
     const user = await User.findByIdAndUpdate(
       userId,
@@ -224,6 +228,7 @@ const updateProfile = async (req, res) => {
           name: user.name,
           email: user.email,
           preferences: user.preferences,
+          profilePicture: user.profilePicture,
           createdAt: user.createdAt
         }
       }
