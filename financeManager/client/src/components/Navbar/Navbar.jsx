@@ -2,9 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sun, Moon, LogOut, User } from 'lucide-react';
 import './Navbar.css';
 
-const Navbar = ({ isDarkMode, setIsDarkMode, userData }) => {
+const Navbar = ({ isDarkMode, setIsDarkMode }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -14,12 +16,10 @@ const Navbar = ({ isDarkMode, setIsDarkMode, userData }) => {
     setShowDropdown(!showDropdown);
   };
 
-  console.log("user: ", userData)
-
   const handleLogout = async () => {
     try {
       // Get the token from localStorage (adjust based on how you store it)
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      const token = localStorage.getItem('authToken');
 
       // Make API call to logout endpoint
       const response = await fetch('/api/logout', {
@@ -69,16 +69,44 @@ const Navbar = ({ isDarkMode, setIsDarkMode, userData }) => {
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        console.log("navbar token: ", token)
+
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch('http://localhost:5000/api/profile', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data.data.user || data.user || data);
+        } else {
+          console.error('Failed to fetch user data:', response.status, response.statusText);
+          // If unauthorized, you might want to redirect to login
+          if (response.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('authToken');
+            window.location.href = '/login';
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    fetchUserData();
   }, []);
 
   return (
@@ -118,7 +146,11 @@ const Navbar = ({ isDarkMode, setIsDarkMode, userData }) => {
             </div>
             {/* User Avatar */}
             <div className="user-avatar" onClick={toggleDropdown} ref={dropdownRef}>
-              {userData?.profilePicture || userData?.avatar ? (
+              {loading ? (
+                <div className="avatar-icon">
+                  <User size={16} />
+                </div>
+              ) : userData?.profilePicture || userData?.avatar ? (
                 <img
                   src={userData?.profilePicture || userData?.avatar}
                   alt="User Avatar"
