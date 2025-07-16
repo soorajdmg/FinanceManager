@@ -368,7 +368,6 @@ const getMonthStats = asyncHandler(async (req, res) => {
 
     try {
         const monthlyStats = await MonthlyStats.getMonthStats(userId, parseInt(year), parseInt(month));
-        console.log('Monthlystats: ', monthlyStats)
 
         if (!monthlyStats) {
             return res.status(404).json({

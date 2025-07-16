@@ -16,6 +16,7 @@ const recipientNameMapping = {
   'Panda Supermarket': ['PANDA SU'],
   'Kattoor Supermarket': ['Katto Or'],
   'V-Mart': ['Vm mart', 'Vmmart', 'V MART', 'VM MART'],
+  'Sm Vegit': ['Sm Vegitables'],
   'Wings Co.': ['M S Wing'],
   'The Cake Shop': ['De cake', 'DE CAKE', 'DECAKE'],
   'Al Baike Restaurant': ['Al baike', 'AL BAIKE', 'ALBAIKE'],
@@ -32,13 +33,13 @@ const recipientNameMapping = {
   'Chicking': ['Chickin G'],
   'MS Kottayam': ['M S KOTT', 'MS KOTT', 'MSKOTT'],
   'North Express': ['NORTH EX', 'NORTHEX', 'NORTH EXPRESS'],
-  'Shekhar Fuels': ['Shekhar ', 'Sekhar f', 'SHEKHAR', 'SEKHAR F', 'SHEKHA R'],
+  'Shekhar Fuels, Choonad': ['Shekhar ', 'Sekhar f', 'SHEKHAR', 'SEKHAR F', 'SHEKHA R'],
   'Jaya Fuels': ['Jaya fuels', 'JAYA FUELS', 'JAYAFUELS'],
   'Mohan Fuels': ['Mohan fu', 'MOHAN FU', 'MOHANFU', 'MOHA N FU'],
   'KK Fuels, Haripad': ['K K Moha'],
   'Olaketty Fuels': ['Olaketty', 'OLAKETTY', 'OLA KETTY', 'OLAKE TTY'],
   'MS Petrols': ['MS PETRO', 'MSPETRO', 'MS PETROL'],
-  'Kuttanad Fuels': ['KUTTANA D'],
+  'BP Petrol, Moncomp': ['KUTTANA D'],
   'Roverz Motors': ['ROVER Z M'],
   'Lekk': ['Laksh Mi'],
   'Sanjeev': ['Sanje Ev'],
@@ -70,7 +71,8 @@ const recipientNameMapping = {
   'Zudio': ['ZUDIO A'],
   'HPCL': ['Hpcl', 'HPCL', 'HP CL'],
   'Redbus': ['Redbu S'],
-  'BookMyShow': ['Bookmyshow', 'BOOKMYSHOW', 'BOOK MY SHOW', 'Bookmy Show'],
+  'BookMyShow': ['Bookmyshow', 'BOOKMYSHOW', 'BOOK MY SHOW', 'Bookmy Show', 'Book Myshow'],
+  'Pvr Limi': ['PVR Limited'],
   'Uber India': ['Uber Ind'],
   'Jio': ['Jio', 'JIO', 'RJIO'],
   'CUSAT': ['Cusat', 'CUSAT', 'CU SAT'],
@@ -102,16 +104,28 @@ const bankPatterns = {
 
 // Category mapping based on merchant/recipient names
 const categoryPatterns = {
-  'Shopping': ['Kattoor', 'Amazon', 'Flipkart', 'Myntra', 'More', 'Vmmart', 'Vm mart', 'Lulu', 'Adidas', 'Marginfr', 'Myg', 'Reliance', 'Trends', 'Zudio'],
-  'Food': ['De cake', 'Brufia', 'kfc', 'Utsav', 'Thomson', 'Al baike', 'Thaza fa', 'King foo', 'M S KOTT', 'NORTH EX', 'Swigg Y', 'M S Wing', 'Kottayam Company', 'NIIST Canteen'],
-  'Fuel': ['petrol', 'Shekhar ', 'Sekhar f', 'Kuttanad', 'Hpcl', 'Jaya fuels', 'Mohan fu', 'Olaketty', 'MS PETRO'],
+  'Shopping': ['Kattoor Supermarket', 'Amazon', 'Flipkart', 'Myntra', 'More', 'Vmmart',
+    'Vm mart', 'V-mart', 'Lulu', 'Adidas', 'Marginfr', 'Myg', 'Reliance', 'Trends', 'Zudio',
+    'Sm Vegitables', 'Decathlon'],
+
+  'Food': ['Hotel', 'Bakery', 'De cake', 'Brufia', 'kfc', 'Chicking', 'Utsav', 'Thomson', 'Al baike', 'AL TAZA',
+    'Thaza fa', 'King foo', 'MS Kottayam', 'NORTH EX', 'Wings Co.',
+    'Kottayam Company', 'NIIST Canteen', 'Swiggy', 'Zam Zam', 'Icespot', 'MC Stores', 'Pizza Hut', 'A2b Adyar', 'Anns Bakery'],
+
+  'Fuel': ['petrol', 'fuels', 'fuel', 'Shekhar ', 'Sekhar f', 'Kuttanad', 'Hpcl', 'Jaya fuels',
+    'Mohan fu', 'Olaketty', 'MS PETROL', 'Tc Fuels'],
+
   'Movie': ['Bookmyshow', 'Ganam'],
   'Recharge': ['Jio'],
   'Pappa': ['Murugara', 'MURU GARA'],
-  'College': ['Cusat', 'Abin', 'M c', 'Abhinav  a', 'Cucek', 'Aashin m', 'Sajumon', 'Mrs  san', 'Santhosh'],
+
+  'College': ['Cusat', 'Abin', 'Cucek',
+    'Sajumon', 'Mrs  san', 'Santhosh', 'BINDU JOHN'],
+
   'Withdrawal': ['Atm', 'ATM WDL', 'ATM CASH'],
-  'Travel': ['Indian r', 'Irctc', 'Abhibus', 'Ixigo'],
-  'Investment': ['PHONEP E', 'JAR', 'SAFE GOLD', 'Safegold']
+  'Travel': ['Indian r', 'Irctc', 'Abhibus', 'Redbus', 'Ixigo', 'Uber India'],
+  'Investment': ['PHONEP E', 'JAR', 'SAFE GOLD', 'Safegold'],
+  'Work': ['Tinkerhub']
 };
 
 const extractUPIDetails = (description) => {
@@ -937,33 +951,90 @@ const uploadBankStatement = async (req, res) => {
   console.log('=== BANK STATEMENT UPLOAD STARTED ===');
 
   try {
-    if (!req.file) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'No file uploaded. Please select a PDF file.'
+        message: 'No files uploaded. Please select PDF files.'
       });
     }
 
-    console.log('File uploaded:', {
-      filename: req.file.filename,
-      originalname: req.file.originalname,
-      size: req.file.size,
-      path: req.file.path
-    });
+    const allProcessedData = [];
+    const processingErrors = [];
 
-    // Extract text from PDF
-    const filePath = req.file.path;
-    const fileBuffer = fs.readFileSync(filePath);
+    console.log(`Processing ${req.files.length} files...`);
 
-    console.log('Extracting text from PDF...');
-    const pdfData = await pdf(fileBuffer);
-    const extractedText = pdfData.text;
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i];
 
-    console.log('PDF text extracted successfully');
-    console.log('Text length:', extractedText.length);
+      console.log(`Processing file ${i + 1}/${req.files.length}:`, {
+        filename: file.filename,
+        originalname: file.originalname,
+        size: file.size,
+        path: file.path
+      });
 
-    // Clean up the uploaded file
-    cleanupFile(filePath);
+      try {
+        // Extract text from PDF
+        const filePath = file.path;
+        const fileBuffer = fs.readFileSync(filePath);
+
+        console.log(`Extracting text from PDF ${i + 1}...`);
+        const pdfData = await pdf(fileBuffer);
+        const extractedText = pdfData.text;
+
+        console.log(`PDF ${i + 1} text extracted successfully, length:`, extractedText.length);
+
+        // Clean up the uploaded file
+        cleanupFile(filePath);
+
+        // Process the extracted text
+        const bankName = detectBankFromText(extractedText);
+        const dateRange = extractDateRange(extractedText);
+        const accountInfo = extractAccountInfo(extractedText);
+        const transactions = parseTransactionData(extractedText);
+
+        if (transactions.length === 0) {
+          processingErrors.push({
+            fileName: file.originalname,
+            error: 'No transactions found in this PDF'
+          });
+          continue;
+        }
+
+        // Prepare processed data for this file
+        const processedData = {
+          fileName: file.originalname,
+          bankName,
+          dateRange,
+          transactions,
+          transactionsFound: transactions.length,
+          accountInfo: {
+            bankName,
+            ...accountInfo,
+            fileName: file.originalname,
+            processedAt: new Date().toISOString(),
+            totalTransactions: transactions.length,
+            statementPeriod: dateRange
+          }
+        };
+
+        allProcessedData.push(processedData);
+
+      } catch (error) {
+        console.error(`Error processing file ${file.originalname}:`, error);
+        processingErrors.push({
+          fileName: file.originalname,
+          error: error.message
+        });
+
+        // Clean up file if error occurs
+        try {
+          cleanupFile(file.path);
+        } catch (cleanupError) {
+          console.error('Error cleaning up file:', cleanupError);
+        }
+      }
+    }
 
     // Process the extracted text
     const bankName = detectBankFromText(extractedText);
@@ -994,46 +1065,46 @@ const uploadBankStatement = async (req, res) => {
       });
     }
 
-    // Prepare response data
-    const processedData = {
-      bankName,
-      dateRange,
-      transactions,
-      transactionsFound: transactions.length,
-      accountInfo: {
-        bankName,
-        ...accountInfo,
-        fileName: req.file.originalname,
-        processedAt: new Date().toISOString(),
-        totalTransactions: transactions.length,
-        statementPeriod: dateRange
-      }
-    };
+    if (allProcessedData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No files could be processed successfully',
+        errors: processingErrors
+      });
+    }
 
-    console.log('=== PROCESSING COMPLETED SUCCESSFULLY ===');
-    console.log('Final result:', {
-      bankName,
-      transactionsFound: transactions.length,
-      accountInfo: processedData.accountInfo
-    });
+    const totalTransactions = allProcessedData.reduce((sum, data) => sum + data.transactionsFound, 0);
+
+    console.log('=== BATCH PROCESSING COMPLETED ===');
+    console.log(`Successfully processed ${allProcessedData.length} files`);
+    console.log(`Total transactions found: ${totalTransactions}`);
+    console.log(`Files with errors: ${processingErrors.length}`);
 
     res.status(200).json({
       success: true,
-      message: 'Bank statement processed successfully',
-      data: processedData
+      message: `${allProcessedData.length} bank statements processed successfully`,
+      data: {
+        processedFiles: allProcessedData,
+        totalFiles: req.files.length,
+        successfulFiles: allProcessedData.length,
+        failedFiles: processingErrors.length,
+        totalTransactions: totalTransactions,
+        errors: processingErrors.length > 0 ? processingErrors : undefined
+      }
     });
-
   } catch (error) {
     console.error('=== ERROR PROCESSING BANK STATEMENT ===');
     console.error('Error details:', error);
 
-    // Clean up file if error occurs
-    if (req.file && req.file.path) {
-      try {
-        cleanupFile(req.file.path);
-      } catch (cleanupError) {
-        console.error('Error cleaning up file:', cleanupError);
-      }
+    // Clean up files if error occurs
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        try {
+          cleanupFile(file.path);
+        } catch (cleanupError) {
+          console.error('Error cleaning up file:', cleanupError);
+        }
+      });
     }
 
     res.status(500).json({

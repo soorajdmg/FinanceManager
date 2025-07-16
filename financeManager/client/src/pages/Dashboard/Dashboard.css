@@ -68,7 +68,7 @@
     font-size: 1.5rem;
     font-weight: 700;
     font-family: 'Gilroy-extrabold';
-    color: #1e293b;
+    color: #425f7e;
     margin: 0 0 0.5rem 0;
 }
 
@@ -92,7 +92,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: #3b82f6;
+    background: #687387;
     color: white;
     border: none;
     border-radius: 0.75rem;
@@ -104,7 +104,7 @@
 }
 
 .refresh-button:hover:not(:disabled) {
-    background: #2563eb;
+    background: #576172;
     transform: translateY(-1px);
 }
 
@@ -873,244 +873,6 @@
     font-size: 0.875rem;
     color: #334155;
     font-weight: 500;
-}
-
-/* NEW TRANSACTIONS SECTION - Updated to match screenshot */
-.transactions-card-new {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    overflow: hidden;
-}
-
-.dark-mode .transactions-card-new {
-    background: linear-gradient(135deg, rgb(31, 41, 55) 0%, rgb(55, 65, 81) 100%);
-    border: 1px solid rgba(55, 65, 81, 0.3);
-    /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); */
-}
-
-.transactions-header-new {
-    padding: 2rem 2rem 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #ffffff;
-}
-
-.dark-mode .transactions-header-new {
-    background: rgb(31, 41, 55);
-}
-
-.transactions-title-new {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-}
-
-.dark-mode .transactions-title-new {
-    color: rgba(240, 246, 255, 0.9);
-}
-
-.sort-dropdown {
-    padding: 0.5rem 1rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-    font-size: 0.8rem;
-    font-weight: 400;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #64748b;
-    cursor: pointer;
-    outline: none;
-    transition: all 0.2s ease;
-}
-
-.dark-mode .sort-dropdown {
-    background: rgb(17, 24, 39);
-    border: 1px solid rgba(55, 65, 81, 0.3);
-    color: rgba(240, 246, 255, 0.6);
-}
-
-.sort-dropdown:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-}
-
-.dark-mode .sort-dropdown:hover {
-    background: rgb(55, 65, 81);
-    border-color: rgba(55, 65, 81, 0.5);
-}
-
-.sort-dropdown:focus {
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.dark-mode .sort-dropdown:focus {
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-}
-
-.transaction-item-new {
-    padding: 1.5rem 2rem;
-    transition: all 0.2s ease;
-    /* Set initial state to visible */
-    opacity: 1;
-    transform: translateX(0);
-    animation: transactionFadeIn 0.5s ease forwards;
-    background: #ffffff;
-    border-top: 1px solid #f1f5f9;
-}
-
-.dark-mode .transaction-item-new {
-    background: rgb(31, 41, 55);
-    border-top: 1px solid rgba(55, 65, 81, 0.3);
-}
-
-.transaction-item-new:first-child {
-    border-top: none;
-}
-
-@keyframes transactionFadeIn {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.transaction-item-new:hover {
-    background: #f7f7f7;
-}
-
-.dark-mode .transaction-item-new:hover {
-    background: rgb(56, 67, 83);
-}
-
-.transaction-content-new {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.transaction-left-new {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-    min-width: 0;
-}
-
-.transaction-icon {
-    width: 3rem;
-    height: 3rem;
-    background: #f8fafc;
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-}
-
-.dark-mode .transaction-icon {
-    background: rgb(17, 24, 39);
-    border: 1px solid rgba(55, 65, 81, 0.3);
-}
-
-.transaction-item-new:hover .transaction-icon {
-    background: #dde5ed;
-}
-
-.dark-mode .transaction-item-new:hover .transaction-icon {
-    background: rgba(55, 65, 81, 0.7);
-}
-
-.transaction-icon-svg {
-    width: 1.25rem;
-    height: 1.25rem;
-    color: #64748b;
-}
-
-.dark-mode .transaction-icon-svg {
-    color: rgba(240, 246, 255, 0.6);
-}
-
-.transaction-details-new {
-    flex: 1;
-    min-width: 0;
-}
-
-.transaction-description-new {
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 0.25rem 0;
-    font-size: 1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.dark-mode .transaction-description-new {
-    color: rgba(240, 246, 255, 0.9);
-}
-
-.transaction-date-new {
-    font-size: 0.875rem;
-    color: #94a3b8;
-    margin: 0;
-}
-
-.dark-mode .transaction-date-new {
-    color: rgba(240, 246, 255, 0.5);
-}
-
-.transaction-right-new {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-shrink: 0;
-}
-
-.transaction-amount-new {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0;
-    text-align: right;
-}
-
-.dark-mode .transaction-amount-new {
-    color: rgba(240, 246, 255, 0.9);
-}
-
-.transaction-more-icon {
-    width: 1.25rem;
-    height: 1.25rem;
-    color: #94a3b8;
-    cursor: pointer;
-    transition: color 0.2s ease;
-}
-
-.dark-mode .transaction-more-icon {
-    color: rgba(240, 246, 255, 0.5);
-}
-
-.transaction-more-icon:hover {
-    color: #64748b;
-}
-
-.dark-mode .transaction-more-icon:hover {
-    color: rgba(240, 246, 255, 0.7);
-}
-
-.dark-mode .expense-label {
-    color: rgba(240, 246, 255, 0.8);
 }
 
 /* Add fallback styles for browsers that don't support certain features */

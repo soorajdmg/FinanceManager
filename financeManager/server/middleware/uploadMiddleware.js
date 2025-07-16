@@ -35,7 +35,7 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
-    files: 1 // Only allow 1 file at a time
+    files: 10
   }
 });
 
@@ -67,7 +67,7 @@ const handleUploadError = (err, req, res, next) => {
       message: 'Only PDF files are allowed.'
     });
   }
-  
+
   return res.status(500).json({
     success: false,
     message: 'File upload failed.'

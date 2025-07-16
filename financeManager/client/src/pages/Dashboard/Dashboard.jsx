@@ -894,50 +894,9 @@ const Dashboard = ({ isDarkMode, userData }) => {
             </div>
           </div>
 
-          {/* Recent Transactions */}
-          <div className="transactions-card-new">
-            <div className="transactions-header-new">
-              <h3 className="transactions-title-new">Recent transactions</h3>
-              <select className="sort-dropdown">
-                <option>Sort by</option>
-                <option>Date</option>
-                <option>Amount</option>
-                <option>Category</option>
-              </select>
-            </div>
+          {/* Investments */}
+          <div className="investments-card">
 
-            <div className="transactions-list-new">
-              {recentTransactions.map((transaction, index) => {
-                const IconComponent = transaction.icon;
-                return (
-                  <div
-                    key={transaction.id}
-                    className="transaction-item-new"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <div className="transaction-content-new">
-                      <div className="transaction-left-new">
-                        <div className="transaction-icon">
-                          <IconComponent className="transaction-icon-svg" />
-                        </div>
-
-                        <div className="transaction-details-new">
-                          <p className="transaction-description-new">{transaction.description}</p>
-                          <p className="transaction-date-new">{transaction.date}</p>
-                        </div>
-                      </div>
-
-                      <div className="transaction-right-new">
-                        <p className="transaction-amount-new">
-                          ₹{transaction.amount.toFixed(2)}
-                        </p>
-                        <MoreHorizontal className="transaction-more-icon" />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </div>
       </div>
