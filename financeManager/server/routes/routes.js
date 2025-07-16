@@ -6,7 +6,9 @@ const {
   logout,
   getProfile,
   updateProfile,
-  changePassword
+  changePassword,
+  updateNotifications,
+  updatePrivacy
 } = require('../controllers/authController');
 const {
   createTransaction,
@@ -53,6 +55,10 @@ router.get('/profile', authMiddleware, getProfile);
 router.put('/profile', authMiddleware, updateProfile);
 router.put('/change-password', authMiddleware, changePassword);
 
+// User preference routes (all protected)
+router.put('/notifications', authMiddleware, updateNotifications);
+router.put('/privacy', authMiddleware, updatePrivacy);
+
 // Transaction routes (all protected)
 router.post('/transactions', authMiddleware, createTransaction);
 router.get('/transactions', authMiddleware, getTransactions);
@@ -90,4 +96,4 @@ router.post('/upload/bank-statement', authMiddleware, uploadMiddleware, handleUp
 router.post('/upload/import-transactions', authMiddleware, importTransactions);
 router.get('/upload/history', authMiddleware, getUploadHistory);
 
-module.exports = router;
+module.exports = router; 

@@ -5,13 +5,23 @@ const User = require('../models/userModel');
 // Register new user
 const register = async (req, res) => {
   try {
-    const { name, email, password, theme = 'light' } = req.body;
+    const {
+      name,
+      email,
+      password,
+      phone,
+      company,
+      theme = 'light',
+      language = 'en',
+      timezone = 'UTC-5',
+      dateFormat = 'MM/DD/YYYY'
+    } = req.body;
 
     // Validation
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, and password are required'
+        message: 'First name, last name, email, and password are required'
       });
     }
 
@@ -39,8 +49,13 @@ const register = async (req, res) => {
     const newUser = new User({
       name,
       email,
+      phone,
+      company,
       passwordHash,
       preferences: {
+        language,
+        timezone,
+        dateFormat,
         theme
       }
     });
@@ -62,8 +77,13 @@ const register = async (req, res) => {
           id: newUser._id,
           name: newUser.name,
           email: newUser.email,
-          preferences: newUser.preferences,
+          phone: newUser.phone,
+          company: newUser.company,
           profilePicture: newUser.profilePicture,
+          notifications: newUser.notifications,
+          privacy: newUser.privacy,
+          preferences: newUser.preferences,
+          status: newUser.status,
           createdAt: newUser.createdAt
         },
         token
@@ -93,7 +113,9 @@ const login = async (req, res) => {
     }
 
     // Find user by email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, status: 'active' });
+    console.log('Found user:', user ? 'Yes' : 'No'); // Add this line
+    console.log('User status:', email);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -101,14 +123,41 @@ const login = async (req, res) => {
       });
     }
 
+    // Check if account is locked
+    if (user.security.lockUntil && user.security.lockUntil > Date.now()) {
+      return res.status(423).json({
+        success: false,
+        message: 'Account temporarily locked due to too many failed login attempts'
+      });
+    }
+
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
+      // Increment login attempts
+      const updates = {
+        'security.loginAttempts': user.security.loginAttempts + 1
+      };
+
+      // Lock account after 5 failed attempts for 30 minutes
+      if (user.security.loginAttempts >= 4) {
+        updates['security.lockUntil'] = new Date(Date.now() + 30 * 60 * 1000);
+      }
+
+      await User.findByIdAndUpdate(user._id, updates);
+
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
+
+    // Reset login attempts and update last login
+    await User.findByIdAndUpdate(user._id, {
+      'security.loginAttempts': 0,
+      'security.lockUntil': null,
+      lastLogin: new Date()
+    });
 
     // Generate JWT token
     const token = jwt.sign(
@@ -125,9 +174,15 @@ const login = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
-          preferences: user.preferences,
+          phone: user.phone,
+          company: user.company,
           profilePicture: user.profilePicture,
-          createdAt: user.createdAt
+          notifications: user.notifications,
+          privacy: user.privacy,
+          preferences: user.preferences,
+          status: user.status,
+          createdAt: user.createdAt,
+          lastLogin: user.lastLogin
         },
         token
       }
@@ -163,7 +218,7 @@ const logout = async (req, res) => {
 // Get current user profile
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('-passwordHash');
+    const user = await User.findById(req.userId).select('-passwordHash -security.twoFactorSecret');
 
     if (!user) {
       return res.status(404).json({
@@ -179,9 +234,18 @@ const getProfile = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
-          preferences: user.preferences,
+          company: user.company,
           profilePicture: user.profilePicture,
-          createdAt: user.createdAt
+          notifications: user.notifications,
+          privacy: user.privacy,
+          preferences: user.preferences,
+          security: {
+            twoFactorEnabled: user.security.twoFactorEnabled,
+            lastPasswordChange: user.security.lastPasswordChange
+          },
+          status: user.status,
+          createdAt: user.createdAt,
+          lastLogin: user.lastLogin
         }
       }
     });
@@ -198,19 +262,54 @@ const getProfile = async (req, res) => {
 // Update user profile
 const updateProfile = async (req, res) => {
   try {
-    const { name, theme, profilePicture } = req.body;
+    const {
+      name,
+      phone,
+      company,
+      profilePicture,
+      notifications,
+      privacy,
+      preferences
+    } = req.body;
     const userId = req.userId;
 
     const updateData = {};
+
+    // Basic profile fields
     if (name) updateData.name = name;
-    if (theme) updateData['preferences.theme'] = theme;
-    if (profilePicture) updateData.profilePicture = profilePicture;
+    if (phone !== undefined) updateData.phone = phone;
+    if (company !== undefined) updateData.company = company;
+    if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
+
+    // Notification preferences
+    if (notifications) {
+      if (notifications.email !== undefined) updateData['notifications.email'] = notifications.email;
+      if (notifications.push !== undefined) updateData['notifications.push'] = notifications.push;
+      if (notifications.reports !== undefined) updateData['notifications.reports'] = notifications.reports;
+      if (notifications.alerts !== undefined) updateData['notifications.alerts'] = notifications.alerts;
+    }
+
+    // Privacy settings
+    if (privacy) {
+      if (privacy.profileVisibility) updateData['privacy.profileVisibility'] = privacy.profileVisibility;
+      if (privacy.dataSharing !== undefined) updateData['privacy.dataSharing'] = privacy.dataSharing;
+      if (privacy.analytics !== undefined) updateData['privacy.analytics'] = privacy.analytics;
+    }
+
+    // User preferences
+    if (preferences) {
+      if (preferences.language) updateData['preferences.language'] = preferences.language;
+      if (preferences.timezone) updateData['preferences.timezone'] = preferences.timezone;
+      if (preferences.dateFormat) updateData['preferences.dateFormat'] = preferences.dateFormat;
+      if (preferences.reportFrequency) updateData['preferences.reportFrequency'] = preferences.reportFrequency;
+      if (preferences.theme) updateData['preferences.theme'] = preferences.theme;
+    }
 
     const user = await User.findByIdAndUpdate(
       userId,
       updateData,
       { new: true, runValidators: true }
-    ).select('-passwordHash');
+    ).select('-passwordHash -security.twoFactorSecret');
 
     if (!user) {
       return res.status(404).json({
@@ -227,9 +326,19 @@ const updateProfile = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
-          preferences: user.preferences,
+          phone: user.phone,
+          company: user.company,
           profilePicture: user.profilePicture,
-          createdAt: user.createdAt
+          notifications: user.notifications,
+          privacy: user.privacy,
+          preferences: user.preferences,
+          security: {
+            twoFactorEnabled: user.security.twoFactorEnabled,
+            lastPasswordChange: user.security.lastPasswordChange
+          },
+          status: user.status,
+          createdAt: user.createdAt,
+          lastLogin: user.lastLogin
         }
       }
     });
@@ -286,8 +395,11 @@ const changePassword = async (req, res) => {
     const saltRounds = 12;
     const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
 
-    // Update password
-    await User.findByIdAndUpdate(userId, { passwordHash: newPasswordHash });
+    // Update password and last password change timestamp
+    await User.findByIdAndUpdate(userId, {
+      passwordHash: newPasswordHash,
+      'security.lastPasswordChange': new Date()
+    });
 
     res.status(200).json({
       success: true,
@@ -303,11 +415,96 @@ const changePassword = async (req, res) => {
   }
 };
 
+// Update notification preferences
+const updateNotifications = async (req, res) => {
+  try {
+    const { email, push, reports, alerts } = req.body;
+    const userId = req.userId;
+
+    const updateData = {};
+    if (email !== undefined) updateData['notifications.email'] = email;
+    if (push !== undefined) updateData['notifications.push'] = push;
+    if (reports !== undefined) updateData['notifications.reports'] = reports;
+    if (alerts !== undefined) updateData['notifications.alerts'] = alerts;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('notifications');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Notification preferences updated successfully',
+      data: {
+        notifications: user.notifications
+      }
+    });
+
+  } catch (error) {
+    console.error('Update notifications error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Update privacy settings
+const updatePrivacy = async (req, res) => {
+  try {
+    const { profileVisibility, dataSharing, analytics } = req.body;
+    const userId = req.userId;
+
+    const updateData = {};
+    if (profileVisibility) updateData['privacy.profileVisibility'] = profileVisibility;
+    if (dataSharing !== undefined) updateData['privacy.dataSharing'] = dataSharing;
+    if (analytics !== undefined) updateData['privacy.analytics'] = analytics;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('privacy');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Privacy settings updated successfully',
+      data: {
+        privacy: user.privacy
+      }
+    });
+
+  } catch (error) {
+    console.error('Update privacy error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   logout,
   getProfile,
   updateProfile,
-  changePassword
+  changePassword,
+  updateNotifications,
+  updatePrivacy
 };

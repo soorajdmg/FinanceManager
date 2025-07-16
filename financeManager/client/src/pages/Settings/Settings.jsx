@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User,
   Bell,
@@ -18,6 +18,9 @@ import {
   Upload,
   X,
   BarChart3,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
 } from 'lucide-react';
 import './settings.css';
 
@@ -25,11 +28,16 @@ const Settings = () => {
   const [activeSection, setActiveSection] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [user, setUser] = useState(null);
+
   const [formData, setFormData] = useState({
-    firstName: 'Sooraj',
-    lastName: 'Murugaraj',
-    email: 'soorajmurugaraj@gmail.com',
-    phone: '+91 9846249930',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     company: '',
     profilePicture: null,
     profilePicturePreview: null,
@@ -52,6 +60,266 @@ const Settings = () => {
     }
   });
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  // API base URL
+  const API_BASE_URL = 'http://localhost:5000/api';
+
+  // Get user from localStorage on component mount
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, []);
+
+  const userId = user?.id;
+
+  // Fetch user profile data
+  const fetchProfile = async () => {
+    if (!userId) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 401) {
+        const errorText = await response.text();
+        throw new Error(`Unauthorized: ${errorText}`);
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+
+      const data = await response.json();
+      const profile = data.data;
+      console.log("settings data: ", profile)
+
+      // Update form data with fetched profile
+      setFormData(prev => ({
+        ...prev,
+        firstName: profile.user?.name || '',
+        lastName: profile.user?.lastName || '',
+        email: profile.user?.email || '',
+        phone: profile.user?.phone || '',
+        company: profile.user?.company || '',
+        profilePicturePreview: profile.user?.profilePicture || null,
+        notifications: {
+          email: profile.user?.notifications?.email ?? true,
+          push: profile.user?.notifications?.push ?? false,
+          reports: profile.user?.notifications?.reports ?? true,
+          alerts: profile.user?.notifications?.alerts ?? true
+        },
+        privacy: {
+          profileVisibility: profile.user?.privacy?.profileVisibility || 'private',
+          dataSharing: profile.user?.privacy?.dataSharing ?? false,
+          analytics: profile.user?.privacy?.analytics ?? true
+        },
+        preferences: {
+          language: profile.user?.preferences?.language || 'en',
+          timezone: profile.user?.preferences?.timezone || 'UTC-5',
+          dateFormat: profile.user?.preferences?.dateFormat || 'MM/DD/YYYY',
+          reportFrequency: profile.user?.preferences?.reportFrequency || 'weekly'
+        }
+      })); 
+
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update profile
+  const updateProfile = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          company: formData.company
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      const data = await response.json();
+      setSuccess('Profile updated successfully');
+
+      // Update localStorage user data
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const updatedUser = {
+        ...currentUser,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company
+      };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Change password
+  const changePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/change-password`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to change password');
+      }
+
+      setSuccess('Password changed successfully');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err) {
+      console.error('Error changing password:', err);
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Update notifications
+  const updateNotifications = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/notifications`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData.notifications)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update notifications');
+      }
+
+      setSuccess('Notification preferences updated successfully');
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err) {
+      console.error('Error updating notifications:', err);
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Update privacy settings
+  const updatePrivacy = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/privacy`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData.privacy)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update privacy settings');
+      }
+
+      setSuccess('Privacy settings updated successfully');
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err) {
+      console.error('Error updating privacy settings:', err);
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Fetch profile on component mount
+  useEffect(() => {
+    if (userId) {
+      fetchProfile();
+    }
+  }, [userId]);
+
+  // Handle input changes
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -69,11 +337,37 @@ const Settings = () => {
     }));
   };
 
-  const handleSave = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+  const handlePasswordChange = (field, value) => {
+    setPasswordData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle save based on active section
+  const handleSave = async () => {
+    setError(null);
+    setSuccess(null);
+
+    switch (activeSection) {
+      case 'profile':
+        await updateProfile();
+        break;
+      case 'notifications':
+        await updateNotifications();
+        break;
+      case 'privacy':
+        await updatePrivacy();
+        break;
+      case 'preferences':
+        // For now, preferences are stored locally
+        // You can add a backend endpoint for preferences if needed
+        setSuccess('Preferences updated successfully');
+        setTimeout(() => setSuccess(null), 3000);
+        break;
+      default:
+        break;
+    }
   };
 
   const handleProfilePictureChange = (e) => {
@@ -104,8 +398,23 @@ const Settings = () => {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'privacy', label: 'Privacy & Security', icon: Shield },
     { id: 'preferences', label: 'Preferences', icon: Globe },
-    // { id: 'account', label: 'Account', icon: Trash2 }
   ];
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="settings-container">
+        <div className="settings-padding">
+          <div className="settings-max-width">
+            <div className="loading-container">
+              <Loader2 className="loading-spinner" />
+              <p className="loading-text">Loading settings...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="settings-container">
@@ -202,7 +511,7 @@ const Settings = () => {
                       </div>
                     </div>
 
-                    {/* Existing Form Grid */}
+                    {/* Form Grid */}
                     <div className="form-grid">
                       <div className="form-group">
                         <label className="form-label">First Name</label>
@@ -246,10 +555,20 @@ const Settings = () => {
                           onChange={(e) => handleInputChange('phone', e.target.value)}
                         />
                       </div>
+                      <div className="form-group">
+                        <label className="form-label">Company</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={formData.company}
+                          onChange={(e) => handleInputChange('company', e.target.value)}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
+
               {/* Notifications Section */}
               {activeSection === 'notifications' && (
                 <div className="content-section">
@@ -298,6 +617,46 @@ const Settings = () => {
                           <span className="toggle-slider"></span>
                         </label>
                       </div>
+
+                      <div className="notification-item">
+                        <div className="notification-info">
+                          <div className="settings-notification-icon">
+                            <BarChart3 />
+                          </div>
+                          <div className="notification-content">
+                            <h4>Report Notifications</h4>
+                            <p>Get weekly/monthly financial reports</p>
+                          </div>
+                        </div>
+                        <label className="toggle-switch">
+                          <input
+                            type="checkbox"
+                            checked={formData.notifications.reports}
+                            onChange={(e) => handleNestedChange('notifications', 'reports', e.target.checked)}
+                          />
+                          <span className="toggle-slider"></span>
+                        </label>
+                      </div>
+
+                      <div className="notification-item">
+                        <div className="notification-info">
+                          <div className="settings-notification-icon">
+                            <AlertCircle />
+                          </div>
+                          <div className="notification-content">
+                            <h4>Alert Notifications</h4>
+                            <p>Get alerts for unusual spending patterns</p>
+                          </div>
+                        </div>
+                        <label className="toggle-switch">
+                          <input
+                            type="checkbox"
+                            checked={formData.notifications.alerts}
+                            onChange={(e) => handleNestedChange('notifications', 'alerts', e.target.checked)}
+                          />
+                          <span className="toggle-slider"></span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -312,17 +671,17 @@ const Settings = () => {
 
                   <div className="settings-card">
                     <div className="privacy-section">
-                      <h3 className="subsection-title">Account Security</h3>
+                      <h3 className="subsection-title">Change Password</h3>
                       <div className="security-options">
                         <div className="form-group">
-                          <label className="form-label">
-                            Current Password
-                          </label>
+                          <label className="form-label">Current Password</label>
                           <div className="password-input-wrapper">
                             <input
                               type={showPassword ? 'text' : 'password'}
                               className="form-input"
                               placeholder="Enter current password"
+                              value={passwordData.currentPassword}
+                              onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
                             />
                             <button
                               type="button"
@@ -335,17 +694,48 @@ const Settings = () => {
                         </div>
 
                         <div className="form-group">
-                          <label className="form-label">
-                            New Password
-                          </label>
+                          <label className="form-label">New Password</label>
                           <div className="password-input-wrapper">
                             <input
                               type="password"
                               className="form-input"
                               placeholder="Enter new password"
+                              value={passwordData.newPassword}
+                              onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
                             />
                           </div>
                         </div>
+
+                        <div className="form-group">
+                          <label className="form-label">Confirm New Password</label>
+                          <div className="password-input-wrapper">
+                            <input
+                              type="password"
+                              className="form-input"
+                              placeholder="Confirm new password"
+                              value={passwordData.confirmPassword}
+                              onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          className="action-button primary"
+                          onClick={changePassword}
+                          disabled={isSaving || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                        >
+                          {isSaving ? (
+                            <>
+                              <Loader2 className="button-icon spinning" />
+                              Changing...
+                            </>
+                          ) : (
+                            <>
+                              <Shield className="button-icon" />
+                              Change Password
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
 
@@ -393,27 +783,6 @@ const Settings = () => {
                         </div>
                       </div>
                     </div>
-
-                    {/* <div className="privacy-section">
-                      <h3 className="subsection-title">Two-Factor Authentication</h3>
-                      <div className="two-factor-section">
-                        <div className="two-factor-item">
-                          <div className="two-factor-info">
-                            <div className="two-factor-icon">
-                              <Shield />
-                            </div>
-                            <div className="two-factor-content">
-                              <h4>Authenticator App</h4>
-                              <p>Use an authenticator app to generate secure codes</p>
-                            </div>
-                          </div>
-                          <button className="action-button secondary">
-                            <Shield className="button-icon" />
-                            Setup
-                          </button>
-                        </div>
-                      </div>
-                    </div> */}
                   </div>
                 </div>
               )}
@@ -458,6 +827,7 @@ const Settings = () => {
                           <option value="UTC-5">Eastern Time (UTC-5)</option>
                           <option value="UTC+0">GMT (UTC+0)</option>
                           <option value="UTC+1">Central European (UTC+1)</option>
+                          <option value="UTC+5:30">India Standard Time (UTC+5:30)</option>
                         </select>
                       </div>
 
@@ -497,46 +867,25 @@ const Settings = () => {
                   </div>
                 </div>
               )}
-              {/* Account Section */}
-              {activeSection === 'account' && (
-                <div className="content-section">
-                  <div className="section-header">
-                    <h2 className="section-title">Account Management</h2>
-                  </div>
-
-                  <div className="settings-card">
-                    <div className="account-actions">
-                      <div className="account-section danger-zone">
-                        <h3 className="subsection-title danger">Danger Zone</h3>
-                        <div className="danger-action">
-                          <div className="danger-info">
-                            <h4>Delete Account</h4>
-                            <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
-                          </div>
-                          <button className="action-button danger">
-                            <Trash2 className="button-icon" />
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Save Button */}
               <div className="save-section">
                 <button
-                  className={`save-btn ${isLoading ? 'loading' : ''}`}
+                  className={`save-btn ${isSaving ? 'loading' : ''}`}
                   onClick={handleSave}
-                  disabled={isLoading}
+                  disabled={isSaving}
                 >
-                  {isLoading ? (
-                    <div className="save-spinner spinning"></div>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="save-icon spinning" />
+                      Saving...
+                    </>
                   ) : (
-                    <Save className="save-icon" />
+                    <>
+                      <Save className="save-icon" />
+                      Save Changes
+                    </>
                   )}
-                  {isLoading ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>
