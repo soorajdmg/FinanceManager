@@ -951,90 +951,33 @@ const uploadBankStatement = async (req, res) => {
   console.log('=== BANK STATEMENT UPLOAD STARTED ===');
 
   try {
-    if (!req.files || req.files.length === 0) {
+    if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'No files uploaded. Please select PDF files.'
+        message: 'No file uploaded. Please select a PDF file.'
       });
     }
 
-    const allProcessedData = [];
-    const processingErrors = [];
+    console.log('File uploaded:', {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      size: req.file.size,
+      path: req.file.path
+    });
 
-    console.log(`Processing ${req.files.length} files...`);
+    // Extract text from PDF
+    const filePath = req.file.path;
+    const fileBuffer = fs.readFileSync(filePath);
 
-    for (let i = 0; i < req.files.length; i++) {
-      const file = req.files[i];
+    console.log('Extracting text from PDF...');
+    const pdfData = await pdf(fileBuffer);
+    const extractedText = pdfData.text;
 
-      console.log(`Processing file ${i + 1}/${req.files.length}:`, {
-        filename: file.filename,
-        originalname: file.originalname,
-        size: file.size,
-        path: file.path
-      });
+    console.log('PDF text extracted successfully');
+    console.log('Text length:', extractedText.length);
 
-      try {
-        // Extract text from PDF
-        const filePath = file.path;
-        const fileBuffer = fs.readFileSync(filePath);
-
-        console.log(`Extracting text from PDF ${i + 1}...`);
-        const pdfData = await pdf(fileBuffer);
-        const extractedText = pdfData.text;
-
-        console.log(`PDF ${i + 1} text extracted successfully, length:`, extractedText.length);
-
-        // Clean up the uploaded file
-        cleanupFile(filePath);
-
-        // Process the extracted text
-        const bankName = detectBankFromText(extractedText);
-        const dateRange = extractDateRange(extractedText);
-        const accountInfo = extractAccountInfo(extractedText);
-        const transactions = parseTransactionData(extractedText);
-
-        if (transactions.length === 0) {
-          processingErrors.push({
-            fileName: file.originalname,
-            error: 'No transactions found in this PDF'
-          });
-          continue;
-        }
-
-        // Prepare processed data for this file
-        const processedData = {
-          fileName: file.originalname,
-          bankName,
-          dateRange,
-          transactions,
-          transactionsFound: transactions.length,
-          accountInfo: {
-            bankName,
-            ...accountInfo,
-            fileName: file.originalname,
-            processedAt: new Date().toISOString(),
-            totalTransactions: transactions.length,
-            statementPeriod: dateRange
-          }
-        };
-
-        allProcessedData.push(processedData);
-
-      } catch (error) {
-        console.error(`Error processing file ${file.originalname}:`, error);
-        processingErrors.push({
-          fileName: file.originalname,
-          error: error.message
-        });
-
-        // Clean up file if error occurs
-        try {
-          cleanupFile(file.path);
-        } catch (cleanupError) {
-          console.error('Error cleaning up file:', cleanupError);
-        }
-      }
-    }
+    // Clean up the uploaded file
+    cleanupFile(filePath);
 
     // Process the extracted text
     const bankName = detectBankFromText(extractedText);
@@ -1065,46 +1008,46 @@ const uploadBankStatement = async (req, res) => {
       });
     }
 
-    if (allProcessedData.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No files could be processed successfully',
-        errors: processingErrors
-      });
-    }
+    // Prepare response data
+    const processedData = {
+      bankName,
+      dateRange,
+      transactions,
+      transactionsFound: transactions.length,
+      accountInfo: {
+        bankName,
+        ...accountInfo,
+        fileName: req.file.originalname,
+        processedAt: new Date().toISOString(),
+        totalTransactions: transactions.length,
+        statementPeriod: dateRange
+      }
+    };
 
-    const totalTransactions = allProcessedData.reduce((sum, data) => sum + data.transactionsFound, 0);
-
-    console.log('=== BATCH PROCESSING COMPLETED ===');
-    console.log(`Successfully processed ${allProcessedData.length} files`);
-    console.log(`Total transactions found: ${totalTransactions}`);
-    console.log(`Files with errors: ${processingErrors.length}`);
+    console.log('=== PROCESSING COMPLETED SUCCESSFULLY ===');
+    console.log('Final result:', {
+      bankName,
+      transactionsFound: transactions.length,
+      accountInfo: processedData.accountInfo
+    });
 
     res.status(200).json({
       success: true,
-      message: `${allProcessedData.length} bank statements processed successfully`,
-      data: {
-        processedFiles: allProcessedData,
-        totalFiles: req.files.length,
-        successfulFiles: allProcessedData.length,
-        failedFiles: processingErrors.length,
-        totalTransactions: totalTransactions,
-        errors: processingErrors.length > 0 ? processingErrors : undefined
-      }
+      message: 'Bank statement processed successfully',
+      data: processedData
     });
+
   } catch (error) {
     console.error('=== ERROR PROCESSING BANK STATEMENT ===');
     console.error('Error details:', error);
 
-    // Clean up files if error occurs
-    if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        try {
-          cleanupFile(file.path);
-        } catch (cleanupError) {
-          console.error('Error cleaning up file:', cleanupError);
-        }
-      });
+    // Clean up file if error occurs
+    if (req.file && req.file.path) {
+      try {
+        cleanupFile(req.file.path);
+      } catch (cleanupError) {
+        console.error('Error cleaning up file:', cleanupError);
+      }
     }
 
     res.status(500).json({
