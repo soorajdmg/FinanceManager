@@ -263,7 +263,8 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const {
-      name,
+      firstName,
+      lastName,
       phone,
       profilePicture,
       notifications,
@@ -275,7 +276,8 @@ const updateProfile = async (req, res) => {
     const updateData = {};
 
     // Basic profile fields
-    if (name) updateData.name = name;
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
     if (phone !== undefined) updateData.phone = phone;
     if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
 
@@ -322,7 +324,8 @@ const updateProfile = async (req, res) => {
       data: {
         user: {
           id: user._id,
-          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
           email: user.email,
           phone: user.phone,
           profilePicture: user.profilePicture,
