@@ -357,36 +357,6 @@
     z-index: 10;
 }
 
-.remove-picture-btn {
-    position: absolute;
-    top: -0.25rem;
-    right: -0.25rem;
-    width: 1.5rem;
-    height: 1.5rem;
-    background: #dc2626;
-    color: #ffffff;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
-    z-index: 11;
-}
-
-.remove-picture-btn:hover {
-    background: #b91c1c;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-}
-
-.remove-picture-btn svg {
-    width: 0.75rem;
-    height: 0.75rem;
-}
-
 .profile-picture-info {
     flex: 1;
     min-width: 0;
