@@ -174,6 +174,7 @@ const Settings = () => {
       }
 
       const data = await response.json();
+      console.log('Profile updated:', data);
       setSuccess('Profile updated successfully');
 
       // Update localStorage user data
