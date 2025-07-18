@@ -38,7 +38,6 @@ const Settings = () => {
     lastName: '',
     email: '',
     phone: '',
-    company: '',
     profilePicture: null,
     profilePicturePreview: null,
     notifications: {
@@ -528,7 +527,7 @@ const Settings = () => {
                           onChange={(e) => handleInputChange('lastName', e.target.value)}
                         />
                       </div>
-                      <div className="form-group full-width">
+                      <div className="form-group email-field">
                         <label className="form-label">
                           <Mail className="label-icon" />
                           Email Address
@@ -550,15 +549,6 @@ const Settings = () => {
                           className="form-input"
                           value={formData.phone}
                           onChange={(e) => handleInputChange('phone', e.target.value)}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Company</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={formData.company}
-                          onChange={(e) => handleInputChange('company', e.target.value)}
                         />
                       </div>
                     </div>
