@@ -1,8 +1,13 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  // Basic Profile Information
-  name: {
+  firstName: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 50
+  },
+  lastName: {
     type: String,
     required: true,
     trim: true,

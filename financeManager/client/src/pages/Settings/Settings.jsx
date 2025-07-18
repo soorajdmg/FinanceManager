@@ -117,7 +117,7 @@ const Settings = () => {
       // Update form data with fetched profile
       setFormData(prev => ({
         ...prev,
-        firstName: profile.user?.name || '',
+        firstName: profile.user?.firstName || '',
         lastName: profile.user?.lastName || '',
         email: profile.user?.email || '',
         phone: profile.user?.phone || '',
@@ -140,7 +140,7 @@ const Settings = () => {
           dateFormat: profile.user?.preferences?.dateFormat || 'MM/DD/YYYY',
           reportFrequency: profile.user?.preferences?.reportFrequency || 'weekly'
         }
-      })); 
+      }));
 
     } catch (err) {
       console.error('Error fetching profile:', err);
