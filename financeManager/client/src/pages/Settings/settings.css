@@ -228,7 +228,7 @@
 /* Profile Picture Section - Add this to your existing CSS file */
 
 /* Profile Picture Section */
-.profile-picture-section {
+/* .profile-picture-section {
     display: flex;
     align-items: center;
     gap: 2rem;
@@ -236,6 +236,20 @@
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 1rem;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+} */
+
+.profile-picture-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 2.5rem;
+    padding: 2.5rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 1.5rem;
     margin-bottom: 2rem;
     transition: all 0.3s ease;
     position: relative;
@@ -533,17 +547,17 @@
     }
 }
 
-/* Forms */
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.25rem;
 }
 
 .form-group.full-width {
@@ -565,13 +579,16 @@
     color: #64748b;
 }
 
+
 .form-input {
+    min-height: 48px;
     padding: 0.75rem 1rem;
     border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    font-size: 0.95rem;
     font-size: 0.875rem;
     transition: all 0.2s ease;
-    background: #ffffff;
 }
 
 .form-input:focus {
