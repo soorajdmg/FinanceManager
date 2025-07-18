@@ -6,7 +6,8 @@ const User = require('../models/userModel');
 const register = async (req, res) => {
   try {
     const {
-      name,
+      firstName,
+      lastName,
       email,
       password,
       phone,
@@ -18,7 +19,7 @@ const register = async (req, res) => {
     } = req.body;
 
     // Validation
-    if (!name || !email || !password) {
+    if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
         success: false,
         message: 'First name, last name, email, and password are required'
@@ -47,7 +48,8 @@ const register = async (req, res) => {
 
     // Create new user
     const newUser = new User({
-      name,
+      firstName,
+      lastName,
       email,
       phone,
       company,
@@ -75,7 +77,8 @@ const register = async (req, res) => {
       data: {
         user: {
           id: newUser._id,
-          name: newUser.name,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
           email: newUser.email,
           phone: newUser.phone,
           company: newUser.company,
@@ -232,7 +235,7 @@ const getProfile = async (req, res) => {
       data: {
         user: {
           id: user._id,
-          name: user.name,
+          name: user.firstName + ' ' + user.lastName,
           email: user.email,
           company: user.company,
           profilePicture: user.profilePicture,

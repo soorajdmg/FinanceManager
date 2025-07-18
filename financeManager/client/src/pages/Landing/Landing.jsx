@@ -9,7 +9,8 @@ const Landing = ({ onAuthSuccess }) => {
     email: '',
     password: '',
     confirmPassword: '',
-    fullName: ''
+    firstName: '',
+    lastName: ''
   });
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,8 +40,8 @@ const Landing = ({ onAuthSuccess }) => {
     }
 
     if (!isLogin) {
-      if (!formData.fullName) {
-        setError('Full name is required');
+      if (!formData.firstName || !formData.lastName) {  // Updated validation
+        setError('First name and last name are required');
         return false;
       }
       if (formData.password !== formData.confirmPassword) {
@@ -110,7 +111,6 @@ const Landing = ({ onAuthSuccess }) => {
     }
   };
 
-  // Updated handleSignup function
   const handleSignup = async (signupData) => {
     try {
       console.log('Making register request to:', `${API_BASE_URL}/register`);
@@ -121,7 +121,8 @@ const Landing = ({ onAuthSuccess }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: signupData.fullName,
+          firstName: signupData.firstName,  // Direct use, no splitting needed
+          lastName: signupData.lastName,    // Direct use
           email: signupData.email,
           password: signupData.password,
         }),
@@ -192,7 +193,8 @@ const Landing = ({ onAuthSuccess }) => {
       email: '',
       password: '',
       confirmPassword: '',
-      fullName: ''
+      firstName: '',  // Changed from fullName
+      lastName: ''    // Added lastName
     });
     setError('');
     setSuccess('');
@@ -318,19 +320,38 @@ const Landing = ({ onAuthSuccess }) => {
 
             <div className="auth-form">
               {!isLogin && (
-                <div className="form-group">
-                  <label htmlFor="fullName" className="form-label">Full Name</label>
-                  <input
-                    type="text"
-                    id="fullName"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    placeholder="Enter your full name"
-                    required
-                  />
-                </div>
+                <>
+                  <div className="form-group name-group">
+                    <div className="name-input-container">
+                      <div className="name-field">
+                        <label htmlFor="firstName" className="form-label">First Name</label>
+                        <input
+                          type="text"
+                          id="firstName"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          className="form-input name-input"
+                          placeholder="First name"
+                          required
+                        />
+                      </div>
+                      <div className="name-field">
+                        <label htmlFor="lastName" className="form-label">Last Name</label>
+                        <input
+                          type="text"
+                          id="lastName"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          className="form-input name-input"
+                          placeholder="Last name"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="form-group">

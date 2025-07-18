@@ -356,262 +356,6 @@ body {
   cursor: not-allowed;
 }
 
-/* Progressive Steps Indicator */
-.steps-indicator {
-  display: none;
-  /* Hidden for login, shown for signup */
-  margin-bottom: 2rem;
-}
-
-.signup-form .steps-indicator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.step-dot {
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  background: #e2e8f0;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.step-dot.active {
-  background: #3b82f6;
-  transform: scale(1.2);
-}
-
-.step-dot.completed {
-  background: #10b981;
-}
-
-.step-dot.completed::after {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 0.5rem;
-  font-weight: bold;
-}
-
-.step-connector {
-  width: 2rem;
-  height: 2px;
-  background: #e2e8f0;
-  transition: all 0.3s ease;
-}
-
-.step-connector.active {
-  background: #3b82f6;
-}
-
-.step-connector.completed {
-  background: #10b981;
-}
-
-/* Step Labels */
-.steps-labels {
-  display: none;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  font-size: 0.75rem;
-  color: #64748b;
-}
-
-.signup-form .steps-labels {
-  display: flex;
-}
-
-.step-label {
-  flex: 1;
-  text-align: center;
-  transition: color 0.3s ease;
-}
-
-.step-label.active {
-  color: #3b82f6;
-  font-weight: 600;
-}
-
-.step-label.completed {
-  color: #10b981;
-  font-weight: 600;
-}
-
-/* Form Steps Container */
-.form-steps {
-  position: relative;
-  overflow: hidden;
-}
-
-.form-step {
-  display: none;
-  animation: slideInStep 0.4s ease forwards;
-}
-
-.form-step.active {
-  display: block;
-}
-
-.form-step.slide-out {
-  animation: slideOutStep 0.3s ease forwards;
-}
-
-@keyframes slideInStep {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideOutStep {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-}
-
-/* Accordion Form Styles */
-.form-card {
-  width: 100%;
-}
-
-.accordion-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.accordion-step {
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.accordion-step.active {
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-  background: rgba(255, 255, 255, 0.95);
-}
-
-.accordion-header {
-  padding: 1rem 1.25rem;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #374151;
-  background: rgba(248, 250, 252, 0.8);
-  transition: all 0.3s ease;
-  border-bottom: 1px solid transparent;
-}
-
-.accordion-step.active .accordion-header {
-  background: rgba(59, 130, 246, 0.05);
-  color: #3b82f6;
-  border-bottom-color: rgba(59, 130, 246, 0.1);
-}
-
-.accordion-header:hover {
-  background: rgba(248, 250, 252, 0.9);
-}
-
-.accordion-step.active .accordion-header:hover {
-  background: rgba(59, 130, 246, 0.08);
-}
-
-.accordion-content {
-  padding: 0 1.25rem;
-  max-height: 0;
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.accordion-step.active .accordion-content {
-  padding: 1.25rem;
-  max-height: 400px;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Step Navigation Buttons */
-.step-navigation {
-  display: none;
-  justify-content: space-between;
-  margin-top: 1.5rem;
-  gap: 1rem;
-}
-
-.signup-form .step-navigation {
-  display: flex;
-}
-
-.step-btn {
-  padding: 0.75rem 1.5rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.8);
-  color: #64748b;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.step-btn:hover {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: #d1d5db;
-  transform: translateY(-1px);
-}
-
-.step-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.step-btn.primary {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-}
-
-.step-btn.primary:hover {
-  background: #2563eb;
-  border-color: #2563eb;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.step-btn-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
 /* Form Styles */
 .auth-form {
   display: flex;
@@ -663,6 +407,57 @@ body {
 
 .form-error.show {
   display: block;
+}
+
+/* ADD THESE STYLES TO YOUR Landing.css FILE */
+
+/* Name fields container */
+.name-group {
+  margin-bottom: 1.5rem;
+}
+
+.name-input-container {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.name-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.name-input {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background-color: white;
+  width: 100%;
+}
+
+.name-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.name-input::placeholder {
+  color: #94a3b8;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 640px) {
+  .name-input-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .name-field {
+    width: 100%;
+  }
 }
 
 .password-input-container {
