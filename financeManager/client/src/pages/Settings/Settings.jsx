@@ -121,7 +121,6 @@ const Settings = () => {
         lastName: profile.user?.lastName || '',
         email: profile.user?.email || '',
         phone: profile.user?.phone || '',
-        company: profile.user?.company || '',
         profilePicturePreview: profile.user?.profilePicture || null,
         notifications: {
           email: profile.user?.notifications?.email ?? true,
@@ -167,8 +166,7 @@ const Settings = () => {
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
-          phone: formData.phone,
-          company: formData.company
+          phone: formData.phone
         })
       });
 
@@ -186,8 +184,7 @@ const Settings = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        phone: formData.phone,
-        company: formData.company
+        phone: formData.phone
       };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setUser(updatedUser);

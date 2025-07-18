@@ -11,7 +11,6 @@ const register = async (req, res) => {
       email,
       password,
       phone,
-      company,
       theme = 'light',
       language = 'en',
       timezone = 'UTC-5',
@@ -52,7 +51,6 @@ const register = async (req, res) => {
       lastName,
       email,
       phone,
-      company,
       passwordHash,
       preferences: {
         language,
@@ -81,7 +79,6 @@ const register = async (req, res) => {
           lastName: newUser.lastName,
           email: newUser.email,
           phone: newUser.phone,
-          company: newUser.company,
           profilePicture: newUser.profilePicture,
           notifications: newUser.notifications,
           privacy: newUser.privacy,
@@ -178,7 +175,6 @@ const login = async (req, res) => {
           name: user.name,
           email: user.email,
           phone: user.phone,
-          company: user.company,
           profilePicture: user.profilePicture,
           notifications: user.notifications,
           privacy: user.privacy,
@@ -235,9 +231,10 @@ const getProfile = async (req, res) => {
       data: {
         user: {
           id: user._id,
-          name: user.firstName + ' ' + user.lastName,
+          firstName: user.firstName,
+          lastName: user.lastName,
           email: user.email,
-          company: user.company,
+          phone: user.phone,
           profilePicture: user.profilePicture,
           notifications: user.notifications,
           privacy: user.privacy,
@@ -268,7 +265,6 @@ const updateProfile = async (req, res) => {
     const {
       name,
       phone,
-      company,
       profilePicture,
       notifications,
       privacy,
@@ -281,7 +277,6 @@ const updateProfile = async (req, res) => {
     // Basic profile fields
     if (name) updateData.name = name;
     if (phone !== undefined) updateData.phone = phone;
-    if (company !== undefined) updateData.company = company;
     if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
 
     // Notification preferences
@@ -330,7 +325,6 @@ const updateProfile = async (req, res) => {
           name: user.name,
           email: user.email,
           phone: user.phone,
-          company: user.company,
           profilePicture: user.profilePicture,
           notifications: user.notifications,
           privacy: user.privacy,
