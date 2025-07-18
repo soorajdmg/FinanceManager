@@ -165,12 +165,15 @@ const Settings = () => {
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
-          phone: formData.phone
+          phone: formData.phone,
+          profilePicture: formData.profilePicturePreview || null,
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', response.status, errorData);
+        throw new Error(errorData.message || `Failed to update profile (${response.status})`);
       }
 
       const data = await response.json();
@@ -461,13 +464,6 @@ const Settings = () => {
                                 alt="Profile"
                                 className="profile-picture"
                               />
-                              <button
-                                type="button"
-                                className="remove-picture-btn"
-                                onClick={removeProfilePicture}
-                              >
-                                <X />
-                              </button>
                             </>
                           ) : (
                             <div className="profile-picture-placeholder">
