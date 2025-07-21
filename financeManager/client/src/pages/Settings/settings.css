@@ -225,23 +225,6 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
-/* Profile Picture Section - Add this to your existing CSS file */
-
-/* Profile Picture Section */
-/* .profile-picture-section {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    padding: 2rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    margin-bottom: 2rem;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-} */
-
 .profile-picture-section {
     display: flex;
     align-items: flex-start;
@@ -305,13 +288,6 @@
     position: relative;
 }
 
-/* .profile-picture-placeholder .placeholder-icon {
-    position: absolute;
-    top: 50%;
-    left: 53%;
-    transform: translate(-50%, -50%);
-} */
-
 .profile-picture-wrapper:hover .profile-picture-placeholder {
     background: linear-gradient(135deg, #cbd5e1, #e2e8f0);
     color: #64748b;
@@ -322,10 +298,6 @@
     height: 2rem;
     transition: all 0.3s ease;
 }
-
-/* .profile-picture-wrapper:hover .placeholder-icon {
-    transform: scale(1.1);
-} */
 
 .profile-picture-overlay {
     position: absolute;
@@ -543,13 +515,6 @@
     gap: 0.5rem;
 }
 
-.label-icon {
-    width: 1rem;
-    height: 1rem;
-    color: #64748b;
-}
-
-
 .form-input {
     min-height: 48px;
     padding: 0.75rem 1rem;
@@ -717,7 +682,153 @@
     line-height: 1.4;
 }
 
-/* Privacy */
+/* Password Form Styles */
+.password-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    max-width: 400px;
+}
+
+.password-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.password-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    padding-right: 3rem;
+    /* Space for toggle button */
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #1f2937;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    outline: none;
+}
+
+.password-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.password-input:hover:not(:focus) {
+    border-color: #9ca3af;
+}
+
+.password-input::placeholder {
+    color: #9ca3af;
+}
+
+.password-input:disabled {
+    background-color: #f9fafb;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.password-toggle-btn:hover {
+    color: #374151;
+    background-color: #f3f4f6;
+}
+
+.password-toggle-btn:focus {
+    outline: none;
+    color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.password-actions {
+    margin-top: 1rem;
+}
+
+.password-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #3b82f6;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    min-height: 2.75rem;
+}
+
+.password-submit-btn:hover:not(:disabled) {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.password-submit-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+}
+
+.password-submit-btn:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-icon {
+    flex-shrink: 0;
+}
+
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Privacy Section Styles (keeping your existing structure) */
 .privacy-section {
     margin-bottom: 2rem;
 }
@@ -726,42 +837,110 @@
     margin-bottom: 0;
 }
 
-.privacy-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+.subsection-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 1.5rem;
 }
 
-.privacy-item {
+.privacy-controls-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.privacy-control-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem;
+    padding: 1.25rem;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 0.75rem;
     transition: all 0.3s ease;
 }
 
-.privacy-item:hover {
+.privacy-control-item:hover {
     background: #f1f5f9;
     border-color: #cbd5e1;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.privacy-info h4 {
+.privacy-control-info h4 {
     font-size: 1rem;
     font-weight: 600;
     color: #0f172a;
     margin: 0 0 0.25rem 0;
 }
 
-.privacy-info p {
+.privacy-control-info p {
     font-size: 0.875rem;
     color: #64748b;
     margin: 0;
     line-height: 1.4;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 3rem;
+    height: 1.5rem;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: 0.3s;
+    border-radius: 1.5rem;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 1.125rem;
+    width: 1.125rem;
+    left: 0.1875rem;
+    bottom: 0.1875rem;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked+.toggle-slider {
+    background-color: #3b82f6;
+}
+
+.toggle-switch input:checked+.toggle-slider:before {
+    transform: translateX(1.5rem);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+    .password-form {
+        max-width: 100%;
+    }
+
+    .privacy-control-item {
+        padding: 1rem;
+    }
+
+    .password-submit-btn {
+        width: 100%;
+    }
 }
 
 /* Preferences */

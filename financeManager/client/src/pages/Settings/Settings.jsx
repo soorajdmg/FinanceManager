@@ -360,8 +360,6 @@ const Settings = () => {
         await updatePrivacy();
         break;
       case 'preferences':
-        // For now, preferences are stored locally
-        // You can add a backend endpoint for preferences if needed
         setSuccess('Preferences updated successfully');
         setTimeout(() => setSuccess(null), 3000);
         break;
@@ -526,7 +524,6 @@ const Settings = () => {
                       </div>
                       <div className="form-group email-field">
                         <label className="form-label">
-                          <Mail className="label-icon" />
                           Email Address
                         </label>
                         <input
@@ -538,7 +535,6 @@ const Settings = () => {
                       </div>
                       <div className="form-group">
                         <label className="form-label">
-                          <Phone className="label-icon" />
                           Phone Number
                         </label>
                         <input
@@ -564,9 +560,6 @@ const Settings = () => {
                     <div className="notification-list">
                       <div className="notification-item">
                         <div className="notification-info">
-                          <div className="settings-notification-icon">
-                            <Mail />
-                          </div>
                           <div className="notification-content">
                             <h4>Email Notifications</h4>
                             <p>Receive important updates via email</p>
@@ -584,9 +577,6 @@ const Settings = () => {
 
                       <div className="notification-item">
                         <div className="notification-info">
-                          <div className="settings-notification-icon">
-                            <Bell />
-                          </div>
                           <div className="notification-content">
                             <h4>Push Notifications</h4>
                             <p>Get instant alerts in your browser</p>
@@ -604,9 +594,6 @@ const Settings = () => {
 
                       <div className="notification-item">
                         <div className="notification-info">
-                          <div className="settings-notification-icon">
-                            <BarChart3 />
-                          </div>
                           <div className="notification-content">
                             <h4>Report Notifications</h4>
                             <p>Get weekly/monthly financial reports</p>
@@ -624,9 +611,6 @@ const Settings = () => {
 
                       <div className="notification-item">
                         <div className="notification-info">
-                          <div className="settings-notification-icon">
-                            <AlertCircle />
-                          </div>
                           <div className="notification-content">
                             <h4>Alert Notifications</h4>
                             <p>Get alerts for unusual spending patterns</p>
@@ -656,33 +640,34 @@ const Settings = () => {
                   <div className="settings-card">
                     <div className="privacy-section">
                       <h3 className="subsection-title">Change Password</h3>
-                      <div className="security-options">
-                        <div className="form-group">
-                          <label className="form-label">Current Password</label>
-                          <div className="password-input-wrapper">
+                      <div className="password-form">
+                        <div className="password-field">
+                          <label className="password-label">Current Password</label>
+                          <div className="password-input-container">
                             <input
                               type={showPassword ? 'text' : 'password'}
-                              className="form-input"
+                              className="password-input"
                               placeholder="Enter current password"
                               value={passwordData.currentPassword}
                               onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
                             />
                             <button
                               type="button"
-                              className="password-toggle"
+                              className="password-toggle-btn"
                               onClick={() => setShowPassword(!showPassword)}
+                              aria-label={showPassword ? 'Hide password' : 'Show password'}
                             >
-                              {showPassword ? <EyeOff /> : <Eye />}
+                              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                           </div>
                         </div>
 
-                        <div className="form-group">
-                          <label className="form-label">New Password</label>
-                          <div className="password-input-wrapper">
+                        <div className="password-field">
+                          <label className="password-label">New Password</label>
+                          <div className="password-input-container">
                             <input
                               type="password"
-                              className="form-input"
+                              className="password-input"
                               placeholder="Enter new password"
                               value={passwordData.newPassword}
                               onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
@@ -690,12 +675,12 @@ const Settings = () => {
                           </div>
                         </div>
 
-                        <div className="form-group">
-                          <label className="form-label">Confirm New Password</label>
-                          <div className="password-input-wrapper">
+                        <div className="password-field">
+                          <label className="password-label">Confirm New Password</label>
+                          <div className="password-input-container">
                             <input
                               type="password"
-                              className="form-input"
+                              className="password-input"
                               placeholder="Confirm new password"
                               value={passwordData.confirmPassword}
                               onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
@@ -703,23 +688,25 @@ const Settings = () => {
                           </div>
                         </div>
 
-                        <button
-                          className="action-button primary"
-                          onClick={changePassword}
-                          disabled={isSaving || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-                        >
-                          {isSaving ? (
-                            <>
-                              <Loader2 className="button-icon spinning" />
-                              Changing...
-                            </>
-                          ) : (
-                            <>
-                              <Shield className="button-icon" />
-                              Change Password
-                            </>
-                          )}
-                        </button>
+                        <div className="password-actions">
+                          <button
+                            className="password-submit-btn"
+                            onClick={changePassword}
+                            disabled={isSaving || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                          >
+                            {isSaving ? (
+                              <>
+                                <Loader2 className="btn-icon spinning" size={16} />
+                                <span>Changing Password...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Shield className="btn-icon" size={16} />
+                                <span>Change Password</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -728,9 +715,6 @@ const Settings = () => {
                       <div className="privacy-controls-grid">
                         <div className="privacy-control-item">
                           <div className="privacy-control-header">
-                            <div className="privacy-control-icon">
-                              <Database />
-                            </div>
                             <div className="privacy-control-info">
                               <h4>Data Sharing</h4>
                               <p>Allow anonymous usage data to improve our services</p>
@@ -748,9 +732,6 @@ const Settings = () => {
 
                         <div className="privacy-control-item">
                           <div className="privacy-control-header">
-                            <div className="privacy-control-icon">
-                              <BarChart3 />
-                            </div>
                             <div className="privacy-control-info">
                               <h4>Analytics Tracking</h4>
                               <p>Enable AI analytics for better insights</p>
@@ -782,7 +763,6 @@ const Settings = () => {
                     <div className="preferences-grid">
                       <div className="preference-group">
                         <label className="form-label">
-                          <Globe className="label-icon" />
                           Language
                         </label>
                         <select
@@ -799,7 +779,6 @@ const Settings = () => {
 
                       <div className="preference-group">
                         <label className="form-label">
-                          <Clock className="label-icon" />
                           Timezone
                         </label>
                         <select
@@ -817,7 +796,6 @@ const Settings = () => {
 
                       <div className="preference-group">
                         <label className="form-label">
-                          <Calendar className="label-icon" />
                           Date Format
                         </label>
                         <select
@@ -833,7 +811,6 @@ const Settings = () => {
 
                       <div className="preference-group">
                         <label className="form-label">
-                          <BarChart3 className="label-icon" />
                           Report Frequency
                         </label>
                         <select
