@@ -498,6 +498,49 @@ const updatePrivacy = async (req, res) => {
   }
 };
 
+// Update user preferences
+const updatePreferences = async (req, res) => {
+  try {
+    const { language, timezone, dateFormat, reportFrequency, theme } = req.body;
+    const userId = req.userId;
+
+    const updateData = {};
+    if (language) updateData['preferences.language'] = language;
+    if (timezone) updateData['preferences.timezone'] = timezone;
+    if (dateFormat) updateData['preferences.dateFormat'] = dateFormat;
+    if (reportFrequency) updateData['preferences.reportFrequency'] = reportFrequency;
+    if (theme) updateData['preferences.theme'] = theme;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('preferences');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Preferences updated successfully',
+      data: {
+        preferences: user.preferences
+      }
+    });
+
+  } catch (error) {
+    console.error('Update preferences error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -506,5 +549,6 @@ module.exports = {
   updateProfile,
   changePassword,
   updateNotifications,
-  updatePrivacy
+  updatePrivacy,
+  updatePreferences
 };

@@ -8,7 +8,8 @@ const {
   updateProfile,
   changePassword,
   updateNotifications,
-  updatePrivacy
+  updatePrivacy,
+  updatePreferences
 } = require('../controllers/authController');
 const {
   createTransaction,
@@ -58,6 +59,7 @@ router.put('/change-password', authMiddleware, changePassword);
 // User preference routes (all protected)
 router.put('/notifications', authMiddleware, updateNotifications);
 router.put('/privacy', authMiddleware, updatePrivacy);
+router.put('/preferences', authMiddleware, updatePreferences);  
 
 // Transaction routes (all protected)
 router.post('/transactions', authMiddleware, createTransaction);
