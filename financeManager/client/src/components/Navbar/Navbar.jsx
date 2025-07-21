@@ -167,7 +167,7 @@ const Navbar = ({ isDarkMode, setIsDarkMode }) => {
               {showDropdown && (
                 <div className="dropdown-menu">
                   <div className="dropdown-header">
-                    <div className="dropdown-name">{userData?.name || 'User'}</div>
+                    <div className="dropdown-name">{userData?.firstName + " " + userData?.lastName || 'User'}</div>
                     <div className="dropdown-email">{userData?.email || 'user@example.com'}</div>
                   </div>
                   <div className="dropdown-divider"></div>
