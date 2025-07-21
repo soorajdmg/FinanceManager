@@ -312,6 +312,43 @@ const Settings = () => {
     }
   };
 
+  // Update preferences
+  const updatePreferences = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/preferences`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData.preferences)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', response.status, errorData);
+        throw new Error(errorData.message || `Failed to update preferences (${response.status})`);
+      }
+
+      const data = await response.json();
+      console.log('Preferences updated:', data);
+      setSuccess('Preferences updated successfully');
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err) {
+      console.error('Error updating preferences:', err);
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Fetch profile on component mount
   useEffect(() => {
     if (userId) {
@@ -360,8 +397,7 @@ const Settings = () => {
         await updatePrivacy();
         break;
       case 'preferences':
-        setSuccess('Preferences updated successfully');
-        setTimeout(() => setSuccess(null), 3000);
+        await updatePreferences();
         break;
       default:
         break;
@@ -418,6 +454,20 @@ const Settings = () => {
     <div className="settings-container">
       <div className="settings-padding">
         <div className="settings-max-width">
+          {/* Error and Success Messages */}
+          {error && (
+            <div className="alert alert-error">
+              <AlertCircle className="alert-icon" />
+              <span>{error}</span>
+            </div>
+          )}
+          {success && (
+            <div className="alert alert-success">
+              <CheckCircle className="alert-icon" />
+              <span>{success}</span>
+            </div>
+          )}
+
           {/* Main Content */}
           <div className="settings-layout">
             {/* Navigation Sidebar */}
