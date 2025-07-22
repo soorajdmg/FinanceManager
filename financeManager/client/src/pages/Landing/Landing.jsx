@@ -1,8 +1,74 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, TrendingUp, Shield, BarChart3, PieChart, ArrowRight, DollarSign } from 'lucide-react';
+import { Eye, EyeOff, TrendingUp, Shield, BarChart3, PieChart, ArrowRight, DollarSign, CheckCircle, AlertCircle, Bell, X } from 'lucide-react';
 import './Landing.css';
 
+const FlashMessage = ({ message, type, onRemove }) => {
+  const [isRemoving, setIsRemoving] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleRemove();
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleRemove = () => {
+    setIsRemoving(true);
+    setTimeout(() => {
+      onRemove();
+    }, 300);
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <CheckCircle className="flash-message-icon" />;
+      case 'error':
+        return <AlertCircle className="flash-message-icon" />;
+      case 'warning':
+        return <AlertCircle className="flash-message-icon" />;
+      case 'info':
+        return <Bell className="flash-message-icon" />;
+      default:
+        return <AlertCircle className="flash-message-icon" />;
+    }
+  };
+
+  const getTitle = () => {
+    switch (type) {
+      case 'success':
+        return 'Success';
+      case 'error':
+        return 'Error';
+      case 'warning':
+        return 'Warning';
+      case 'info':
+        return 'Info';
+      default:
+        return 'Notification';
+    }
+  };
+
+  return (
+    <div className={`flash-message ${type} ${isRemoving ? 'removing' : ''}`}>
+      <div className="flash-message-content">
+        {getIcon()}
+        <div className="flash-message-text">
+          <p className="flash-message-title">{getTitle()}</p>
+          <p className="flash-message-description">{message}</p>
+        </div>
+      </div>
+      <button className="flash-message-close" onClick={handleRemove}>
+        <X size={16} />
+      </button>
+      <div className="flash-message-progress"></div>
+    </div>
+  );
+};
+
 const Landing = ({ onAuthSuccess }) => {
+  const [flashMessages, setFlashMessages] = useState([]);
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -16,13 +82,110 @@ const Landing = ({ onAuthSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // You should replace this with your actual backend URL
   const API_BASE_URL = 'http://localhost:5000/api';
+  
+  // Google OAuth Configuration - Replace with your actual Google Client ID
+  const GOOGLE_CLIENT_ID = 'your-google-client-id.googleusercontent.com';
 
   useEffect(() => {
     setIsLoaded(true);
+    // Load Google OAuth script
+    loadGoogleScript();
   }, []);
+
+  const loadGoogleScript = () => {
+    if (window.google) {
+      initializeGoogleSignIn();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = initializeGoogleSignIn;
+    document.head.appendChild(script);
+  };
+
+  const initializeGoogleSignIn = () => {
+    if (window.google) {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCallback,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+    }
+  };
+
+  const handleGoogleCallback = async (response) => {
+    setGoogleLoading(true);
+    try {
+      // Send the Google JWT token to your backend
+      const result = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: response.credential,
+          action: isLogin ? 'login' : 'register'
+        }),
+      });
+
+      const contentType = result.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await result.text();
+        throw new Error(`Server error: ${textResponse}`);
+      }
+
+      const data = await result.json();
+
+      if (!result.ok) {
+        throw new Error(data.message || 'Google authentication failed');
+      }
+
+      // Store the token and user data
+      const { token, user } = data.data;
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      addFlashMessage('Google authentication successful! Redirecting...', 'success');
+
+      setTimeout(() => {
+        onAuthSuccess(token);
+      }, 1500);
+
+    } catch (error) {
+      console.error('Google OAuth error:', error);
+      addFlashMessage(error.message || 'Google authentication failed', 'error');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = () => {
+    if (window.google) {
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Fallback to popup if prompt is not displayed
+          window.google.accounts.id.renderButton(
+            document.getElementById('google-signin-button'),
+            {
+              theme: 'outline',
+              size: 'large',
+              width: '100%',
+              text: isLogin ? 'signin_with' : 'signup_with',
+              shape: 'rectangular'
+            }
+          );
+        }
+      });
+    }
+  };
 
   const handleInputChange = (e) => {
     setFormData({
@@ -40,7 +203,7 @@ const Landing = ({ onAuthSuccess }) => {
     }
 
     if (!isLogin) {
-      if (!formData.firstName || !formData.lastName) {  // Updated validation
+      if (!formData.firstName || !formData.lastName) {
         setError('First name and last name are required');
         return false;
       }
@@ -57,7 +220,6 @@ const Landing = ({ onAuthSuccess }) => {
     return true;
   };
 
-  // Updated handleLogin function
   const handleLogin = async (loginData) => {
     try {
       console.log('Making login request to:', `${API_BASE_URL}/login`);
@@ -75,7 +237,6 @@ const Landing = ({ onAuthSuccess }) => {
 
       console.log('Response status:', response.status);
 
-      // Check if response is JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const textResponse = await response.text();
@@ -90,23 +251,19 @@ const Landing = ({ onAuthSuccess }) => {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Updated to match backend response structure and App.js expectations
       const { token, user } = data.data;
 
-      // Store the token with the correct key that App.js expects
       localStorage.setItem('authToken', token);
       localStorage.setItem('user', JSON.stringify(user));
 
-      setSuccess('Login successful! Redirecting...');
+      addFlashMessage('Login successful! Redirecting...', 'success');
 
-      // Use the callback instead of manual redirect
       setTimeout(() => {
         onAuthSuccess(token);
       }, 1500);
 
       return data;
     } catch (error) {
-      console.error('Login error:', error);
       throw error;
     }
   };
@@ -121,8 +278,8 @@ const Landing = ({ onAuthSuccess }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          firstName: signupData.firstName,  // Direct use, no splitting needed
-          lastName: signupData.lastName,    // Direct use
+          firstName: signupData.firstName,
+          lastName: signupData.lastName,
           email: signupData.email,
           password: signupData.password,
         }),
@@ -130,7 +287,6 @@ const Landing = ({ onAuthSuccess }) => {
 
       console.log('Response status:', response.status);
 
-      // Check if response is JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const textResponse = await response.text();
@@ -144,16 +300,13 @@ const Landing = ({ onAuthSuccess }) => {
         throw new Error(data.message || 'Registration failed');
       }
 
-      // Updated to match backend response structure and App.js expectations
       const { token, user } = data.data;
 
-      // Store the token with the correct key that App.js expects
       localStorage.setItem('authToken', token);
       localStorage.setItem('user', JSON.stringify(user));
 
-      setSuccess('Account created successfully! Redirecting...');
+      addFlashMessage('Account created successfully! Redirecting...', 'success');
 
-      // Use the callback instead of manual redirect
       setTimeout(() => {
         onAuthSuccess(token);
       }, 1500);
@@ -181,7 +334,7 @@ const Landing = ({ onAuthSuccess }) => {
         await handleSignup(formData);
       }
     } catch (error) {
-      setError(error.message || 'An error occurred. Please try again.');
+      addFlashMessage(error.message || 'An error occurred. Please try again.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -193,11 +346,20 @@ const Landing = ({ onAuthSuccess }) => {
       email: '',
       password: '',
       confirmPassword: '',
-      firstName: '',  // Changed from fullName
-      lastName: ''    // Added lastName
+      firstName: '',
+      lastName: ''
     });
     setError('');
     setSuccess('');
+  };
+
+  const addFlashMessage = (message, type = 'info') => {
+    const id = Date.now();
+    setFlashMessages(prev => [...prev, { id, message, type }]);
+  };
+
+  const removeFlashMessage = (id) => {
+    setFlashMessages(prev => prev.filter(msg => msg.id !== id));
   };
 
   return (
@@ -283,27 +445,35 @@ const Landing = ({ onAuthSuccess }) => {
               </p>
             </div>
 
-            {/* Error/Success Messages */}
-            {error && (
-              <div className="message-box error-message">
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="message-box success-message">
-                {success}
-              </div>
-            )}
+            {/* Flash Messages */}
+            <div className="flash-messages-container">
+              {flashMessages.map((msg) => (
+                <FlashMessage
+                  key={msg.id}
+                  message={msg.message}
+                  type={msg.type}
+                  onRemove={() => removeFlashMessage(msg.id)}
+                />
+              ))}
+            </div>
 
             <div className="social-buttons">
-              <button className="social-button google">
-                <svg viewBox="0 0 24 24" className="social-icon">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-                Google
+              <button 
+                className={`social-button google ${googleLoading ? 'loading' : ''}`}
+                onClick={handleGoogleSignIn}
+                disabled={googleLoading}
+              >
+                {googleLoading ? (
+                  <div className="loading-spinner"></div>
+                ) : (
+                  <svg viewBox="0 0 24 24" className="social-icon">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                )}
+                {googleLoading ? 'Connecting...' : 'Google'}
               </button>
 
               <button className="social-button apple">
@@ -313,6 +483,9 @@ const Landing = ({ onAuthSuccess }) => {
                 Apple
               </button>
             </div>
+
+            {/* Hidden div for Google Sign-In button rendering */}
+            <div id="google-signin-button" style={{ display: 'none' }}></div>
 
             <div className="social-divider">
               <span>or</span>
