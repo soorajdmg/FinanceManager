@@ -928,6 +928,289 @@
     transform: translateX(1.5rem);
 }
 
+/* Settings Container - Dark Mode */
+.dark-mode .settings-container {
+    background-color: rgb(32, 42, 65);
+}
+
+/* Header - Dark Mode */
+.dark-mode .settings-title {
+    background: linear-gradient(135deg, rgba(240, 246, 255, 0.9) 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: rgba(240, 246, 255, 0.9);
+    /* Fallback */
+}
+
+.dark-mode .settings-subtitle {
+    color: rgba(240, 246, 255, 0.6);
+}
+
+/* Navigation - Dark Mode */
+.dark-mode .settings-nav {
+    background: rgb(31, 41, 55);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .settings-nav-item:hover {
+    background: rgba(55, 65, 81, 0.2);
+}
+
+.dark-mode .settings-nav-item.active {
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+}
+
+.dark-mode .settings-nav-item.active .settingsNav-icon {
+    color: #60a5fa;
+}
+
+.dark-mode .settingsNav-icon {
+    color: rgba(240, 246, 255, 0.6) !important;
+}
+
+.dark-mode .settingsNav-label {
+    color: rgba(240, 246, 255, 0.7);
+}
+
+.dark-mode .nav-arrow {
+    color: rgba(55, 65, 81, 0.6);
+}
+
+.dark-mode .settings-nav-item:hover .nav-arrow {
+    color: rgba(240, 246, 255, 0.7);
+}
+
+.dark-mode .settings-nav-item.active .nav-arrow {
+    color: #60a5fa;
+}
+
+/* Section Headers - Dark Mode */
+.dark-mode .section-title {
+    color: rgba(240, 246, 255, 0.9);
+}
+
+.dark-mode .subsection-title {
+    color: rgba(240, 246, 255, 0.9);
+    border-bottom-color: rgba(55, 65, 81, 0.3);
+}
+
+.dark-mode .subsection-title.danger {
+    color: #fca5a5;
+    border-bottom-color: rgba(220, 38, 38, 0.3);
+}
+
+/* Settings Card - Dark Mode */
+.dark-mode .settings-card {
+    background: rgb(31, 41, 55);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .settings-card:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25), 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Profile Picture Section - Dark Mode */
+.dark-mode .profile-picture-section {
+    background: rgba(31, 41, 55, 0.8);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+}
+
+.dark-mode .profile-picture-wrapper {
+    border-color: rgba(55, 65, 81, 0.5);
+}
+
+.dark-mode .profile-picture-placeholder {
+    background: linear-gradient(135deg, rgba(55, 65, 81, 0.5), rgba(31, 41, 55, 0.8));
+    color: rgba(240, 246, 255, 0.6);
+}
+
+.dark-mode .profile-picture-wrapper:hover .profile-picture-placeholder {
+    background: linear-gradient(135deg, rgba(55, 65, 81, 0.7), rgba(31, 41, 55, 0.9));
+    color: rgba(240, 246, 255, 0.8);
+}
+
+.dark-mode .profile-picture-title {
+    color: rgba(240, 246, 255, 0.9);
+}
+
+.dark-mode .profile-picture-description {
+    color: rgba(240, 246, 255, 0.6);
+}
+
+.dark-mode .upload-btn {
+    background: #374151;
+    color: rgba(240, 246, 255, 0.9);
+}
+
+.dark-mode .upload-btn:hover {
+    background: #4b5563;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .remove-btn {
+    background: rgba(31, 41, 55, 0.8);
+    color: #fca5a5;
+    border-color: #dc2626;
+}
+
+.dark-mode .remove-btn:hover {
+    background: #dc2626;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+}
+
+/* Form Elements - Dark Mode */
+.dark-mode .form-label {
+    color: rgba(240, 246, 255, 0.8);
+}
+
+.dark-mode .form-input {
+    background: rgb(17, 24, 39);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    color: rgba(240, 246, 255, 0.9);
+}
+
+.dark-mode .form-input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.dark-mode .form-input::placeholder {
+    color: rgba(240, 246, 255, 0.4);
+}
+
+.dark-mode .form-select {
+    background: rgb(17, 24, 39);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    color: rgba(240, 246, 255, 0.9);
+}
+
+.dark-mode .form-select:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+/* Password Toggle - Dark Mode */
+.dark-mode .password-toggle {
+    color: rgba(240, 246, 255, 0.6);
+}
+
+.dark-mode .password-toggle:hover {
+    color: #60a5fa;
+}
+
+.dark-mode .password-input {
+    background-color: rgb(17, 24, 39);
+    border-color: rgba(55, 65, 81, 0.3);
+    color: rgba(240, 246, 255, 0.9);
+}
+
+.dark-mode .password-input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.dark-mode .password-input::placeholder {
+    color: rgba(240, 246, 255, 0.4);
+}
+
+.dark-mode .password-toggle-btn {
+    color: rgba(240, 246, 255, 0.6);
+}
+
+.dark-mode .password-toggle-btn:hover {
+    color: rgba(240, 246, 255, 0.8);
+    background-color: rgba(55, 65, 81, 0.3);
+}
+
+.dark-mode .password-toggle-btn:focus {
+    color: #60a5fa;
+    background-color: rgba(96, 165, 250, 0.1);
+}
+
+.dark-mode .password-submit-btn {
+    background-color: #374151;
+    color: rgba(240, 246, 255, 0.9);
+}
+
+.dark-mode .password-submit-btn:hover:not(:disabled) {
+    background-color: #4b5563;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dark-mode .password-submit-btn:disabled {
+    background-color: rgba(55, 65, 81, 0.5);
+}
+
+/* Toggle Switch - Dark Mode */
+.dark-mode .toggle-slider {
+    background-color: rgba(55, 65, 81, 0.7);
+}
+
+.dark-mode .toggle-switch input:checked+.toggle-slider {
+    background-color: #60a5fa;
+}
+
+/* Notifications - Dark Mode */
+.dark-mode .notification-item {
+    background: rgba(31, 41, 55, 0.8);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+}
+
+.dark-mode .notification-item:hover {
+    background: rgba(55, 65, 81, 0.2);
+    border-color: rgba(55, 65, 81, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .settings-notification-icon {
+    background: rgba(31, 41, 55, 0.8);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    color: rgba(240, 246, 255, 0.6);
+}
+
+.dark-mode .notification-item:hover .settings-notification-icon {
+    background: rgba(55, 65, 81, 0.5);
+    color: #60a5fa;
+}
+
+.dark-mode .notification-content h4 {
+    color: rgba(240, 246, 255, 0.9);
+}
+
+.dark-mode .notification-content p {
+    color: rgba(240, 246, 255, 0.6);
+}
+
+/* Privacy Controls - Dark Mode */
+.dark-mode .privacy-control-item {
+    background: rgba(31, 41, 55, 0.8);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+}
+
+.dark-mode .privacy-control-item:hover {
+    background: rgba(55, 65, 81, 0.2);
+    border-color: rgba(55, 65, 81, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .privacy-control-info h4 {
+    color: rgba(240, 246, 255, 0.9);
+}
+
+.dark-mode .privacy-control-info p {
+    color: rgba(240, 246, 255, 0.6);
+}
+
+/* Password Labels - Dark Mode */
+.dark-mode .password-label {
+    color: rgba(240, 246, 255, 0.8);
+}
+
 /* Responsive Design */
 @media (max-width: 640px) {
     .password-form {
@@ -1266,6 +1549,12 @@
     border-radius: 1.5rem;
     text-align: center;
     animation: saveSlideUp 0.6s ease;
+}
+
+.dark-mode .save-section {
+    background: #111827;
+    border: #4a576b4d;
+
 }
 
 @keyframes saveSlideUp {
