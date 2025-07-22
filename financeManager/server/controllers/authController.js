@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Register new user
 const register = async (req, res) => {
@@ -541,6 +543,180 @@ const updatePreferences = async (req, res) => {
   }
 };
 
+// Google OAuth login
+const googleAuth = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google token is required'
+      });
+    }
+
+    // Verify Google token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, given_name: firstName, family_name: lastName, picture } = payload;
+
+    // Check if user exists
+    let user = await User.findOne({
+      $or: [
+        { email },
+        { 'oauth.google.id': googleId }
+      ]
+    });
+
+    if (user) {
+      // Update existing user's Google OAuth info if needed
+      if (!user.oauth.google.id) {
+        user.oauth.google.id = googleId;
+        user.oauth.google.email = email;
+        await user.save();
+      }
+
+      // Update last login
+      await User.findByIdAndUpdate(user._id, {
+        lastLogin: new Date()
+      });
+    } else {
+      // Create new user
+      user = new User({
+        firstName,
+        lastName: lastName || '',
+        email,
+        profilePicture: picture,
+        oauth: {
+          google: {
+            id: googleId,
+            email
+          }
+        },
+        preferences: {
+          language: 'en',
+          timezone: 'UTC-5',
+          dateFormat: 'MM/DD/YYYY',
+          theme: 'light'
+        }
+      });
+
+      await user.save();
+    }
+
+    // Generate JWT token
+    const jwtToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Google authentication successful',
+      data: {
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone,
+          profilePicture: user.profilePicture,
+          notifications: user.notifications,
+          privacy: user.privacy,
+          preferences: user.preferences,
+          status: user.status,
+          createdAt: user.createdAt,
+          lastLogin: user.lastLogin
+        },
+        token: jwtToken
+      }
+    });
+
+  } catch (error) {
+    console.error('Google auth error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Google authentication failed'
+    });
+  }
+};
+
+// Link Google account to existing user
+const linkGoogleAccount = async (req, res) => {
+  try {
+    const { token } = req.body;
+    const userId = req.userId;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google token is required'
+      });
+    }
+
+    // Verify Google token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email } = payload;
+
+    // Check if Google account is already linked to another user
+    const existingUser = await User.findOne({ 'oauth.google.id': googleId });
+    if (existingUser && existingUser._id.toString() !== userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'This Google account is already linked to another user'
+      });
+    }
+
+    // Update current user's Google OAuth info
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        'oauth.google.id': googleId,
+        'oauth.google.email': email
+      },
+      { new: true }
+    ).select('-passwordHash -security.twoFactorSecret');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Google account linked successfully',
+      data: {
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          oauth: user.oauth
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Link Google account error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to link Google account'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -550,5 +726,7 @@ module.exports = {
   changePassword,
   updateNotifications,
   updatePrivacy,
-  updatePreferences
+  updatePreferences,
+  googleAuth,
+  linkGoogleAccount
 };
