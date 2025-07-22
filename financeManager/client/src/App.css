@@ -50,6 +50,214 @@ body.dark-mode {
   font-style: normal;
 }
 
+/* Flash Messages System */
+.flash-messages-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 400px;
+  pointer-events: none;
+}
+
+.flash-message {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 2px solid;
+  position: relative;
+  overflow: hidden;
+  pointer-events: auto;
+  transform: translateX(100%);
+  opacity: 0;
+  animation: slideInRight 0.4s ease-out forwards;
+  backdrop-filter: blur(5px);
+}
+
+.flash-message.removing {
+  animation: slideOutRight 0.3s ease-in forwards;
+}
+
+/* Flash message types */
+.flash-message.success {
+  border-color: rgba(16, 183, 127, 0.5);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+.flash-message.error {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+.flash-message.warning {
+  border-color: rgba(245, 159, 11, 0.5);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+.flash-message.info {
+  border-color: rgba(59, 131, 246, 0.5);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+/* Flash message content */
+.flash-message-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.flash-message-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+}
+
+.flash-message.success .flash-message-icon {
+  color: #10b981;
+}
+
+.flash-message.error .flash-message-icon {
+  color: #ef4444;
+}
+
+.flash-message.warning .flash-message-icon {
+  color: #f59e0b;
+}
+
+.flash-message.info .flash-message-icon {
+  color: #3b82f6;
+}
+
+.flash-message-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flash-message-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.flash-message-description {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.flash-message-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  color: #9ca3af;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flash-message-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #6b7280;
+  transform: scale(1.1);
+}
+
+/* Progress bar */
+.flash-message-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  /* border-radius: 0 0 12px 12px; */
+  opacity: 0.5;
+  animation: progressBar 10s linear forwards;
+  transform-origin: left;
+}
+
+.flash-message.success .flash-message-progress {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.flash-message.error .flash-message-progress {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.flash-message.warning .flash-message-progress {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.flash-message.info .flash-message-progress {
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+/* Animations */
+@keyframes slideInRight {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes progressBar {
+  0% {
+    width: 100%;
+  }
+
+  100% {
+    width: 0%;
+  }
+}
+
+/* Hover to pause animation */
+.flash-message:hover .flash-message-progress {
+  animation-play-state: paused;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .flash-messages-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+
+  .flash-message {
+    margin: 0;
+  }
+}
+
 /* Sidebar Styles */
 .sidebar {
   width: 280px;
