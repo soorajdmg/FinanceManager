@@ -24,14 +24,79 @@ import {
 } from 'lucide-react';
 import './settings.css';
 
+// Flash Message Component
+const FlashMessage = ({ message, type, onRemove }) => {
+  const [isRemoving, setIsRemoving] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleRemove();
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleRemove = () => {
+    setIsRemoving(true);
+    setTimeout(() => {
+      onRemove();
+    }, 300);
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <CheckCircle className="flash-message-icon" />;
+      case 'error':
+        return <AlertCircle className="flash-message-icon" />;
+      case 'warning':
+        return <AlertCircle className="flash-message-icon" />;
+      case 'info':
+        return <Bell className="flash-message-icon" />;
+      default:
+        return <AlertCircle className="flash-message-icon" />;
+    }
+  };
+
+  const getTitle = () => {
+    switch (type) {
+      case 'success':
+        return 'Success';
+      case 'error':
+        return 'Error';
+      case 'warning':
+        return 'Warning';
+      case 'info':
+        return 'Info';
+      default:
+        return 'Notification';
+    }
+  };
+
+  return (
+    <div className={`flash-message ${type} ${isRemoving ? 'removing' : ''}`}>
+      <div className="flash-message-content">
+        {getIcon()}
+        <div className="flash-message-text">
+          <p className="flash-message-title">{getTitle()}</p>
+          <p className="flash-message-description">{message}</p>
+        </div>
+      </div>
+      <button className="flash-message-close" onClick={handleRemove}>
+        <X size={16} />
+      </button>
+      <div className="flash-message-progress"></div>
+    </div>
+  );
+};
+
 const Settings = () => {
   const [activeSection, setActiveSection] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [user, setUser] = useState(null);
+  const [flashMessages, setFlashMessages] = useState([]);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -68,6 +133,16 @@ const Settings = () => {
   // API base URL
   const API_BASE_URL = 'http://localhost:5000/api';
 
+  // Flash message functions
+  const addFlashMessage = (message, type) => {
+    const id = Date.now() + Math.random();
+    setFlashMessages(prev => [...prev, { id, message, type }]);
+  };
+
+  const removeFlashMessage = (id) => {
+    setFlashMessages(prev => prev.filter(msg => msg.id !== id));
+  };
+
   // Get user from localStorage on component mount
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -89,7 +164,6 @@ const Settings = () => {
 
     try {
       setIsLoading(true);
-      setError(null);
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_BASE_URL}/profile`, {
@@ -142,7 +216,7 @@ const Settings = () => {
 
     } catch (err) {
       console.error('Error fetching profile:', err);
-      setError(err.message);
+      addFlashMessage(err.message, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -152,7 +226,6 @@ const Settings = () => {
   const updateProfile = async () => {
     try {
       setIsSaving(true);
-      setError(null);
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_BASE_URL}/profile`, {
@@ -178,7 +251,7 @@ const Settings = () => {
 
       const data = await response.json();
       console.log('Profile updated:', data);
-      setSuccess('Profile updated successfully');
+      addFlashMessage('Profile updated successfully', 'success');
 
       // Update localStorage user data
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -192,12 +265,9 @@ const Settings = () => {
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setUser(updatedUser);
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
-
     } catch (err) {
       console.error('Error updating profile:', err);
-      setError(err.message);
+      addFlashMessage(err.message, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -206,13 +276,12 @@ const Settings = () => {
   // Change password
   const changePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('New passwords do not match');
+      addFlashMessage('New passwords do not match', 'error');
       return;
     }
 
     try {
       setIsSaving(true);
-      setError(null);
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_BASE_URL}/change-password`, {
@@ -232,19 +301,16 @@ const Settings = () => {
         throw new Error(errorData.message || 'Failed to change password');
       }
 
-      setSuccess('Password changed successfully');
+      addFlashMessage('Password changed successfully', 'success');
       setPasswordData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
-
     } catch (err) {
       console.error('Error changing password:', err);
-      setError(err.message);
+      addFlashMessage(err.message, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -254,7 +320,6 @@ const Settings = () => {
   const updateNotifications = async () => {
     try {
       setIsSaving(true);
-      setError(null);
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_BASE_URL}/notifications`, {
@@ -270,12 +335,11 @@ const Settings = () => {
         throw new Error('Failed to update notifications');
       }
 
-      setSuccess('Notification preferences updated successfully');
-      setTimeout(() => setSuccess(null), 3000);
+      addFlashMessage('Notification preferences updated successfully', 'success');
 
     } catch (err) {
       console.error('Error updating notifications:', err);
-      setError(err.message);
+      addFlashMessage(err.message, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -285,7 +349,6 @@ const Settings = () => {
   const updatePrivacy = async () => {
     try {
       setIsSaving(true);
-      setError(null);
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_BASE_URL}/privacy`, {
@@ -301,12 +364,11 @@ const Settings = () => {
         throw new Error('Failed to update privacy settings');
       }
 
-      setSuccess('Privacy settings updated successfully');
-      setTimeout(() => setSuccess(null), 3000);
+      addFlashMessage('Privacy settings updated successfully', 'success');
 
     } catch (err) {
       console.error('Error updating privacy settings:', err);
-      setError(err.message);
+      addFlashMessage(err.message, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -316,7 +378,6 @@ const Settings = () => {
   const updatePreferences = async () => {
     try {
       setIsSaving(true);
-      setError(null);
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_BASE_URL}/preferences`, {
@@ -336,14 +397,11 @@ const Settings = () => {
 
       const data = await response.json();
       console.log('Preferences updated:', data);
-      setSuccess('Preferences updated successfully');
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      addFlashMessage('Preferences updated successfully', 'success');
 
     } catch (err) {
       console.error('Error updating preferences:', err);
-      setError(err.message);
+      addFlashMessage(err.message, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -383,9 +441,6 @@ const Settings = () => {
 
   // Handle save based on active section
   const handleSave = async () => {
-    setError(null);
-    setSuccess(null);
-
     switch (activeSection) {
       case 'profile':
         await updateProfile();
@@ -454,17 +509,17 @@ const Settings = () => {
     <div className="settings-container">
       <div className="settings-padding">
         <div className="settings-max-width">
-          {/* Error and Success Messages */}
-          {error && (
-            <div className="alert alert-error">
-              <AlertCircle className="alert-icon" />
-              <span>{error}</span>
-            </div>
-          )}
-          {success && (
-            <div className="alert alert-success">
-              <CheckCircle className="alert-icon" />
-              <span>{success}</span>
+          {/* Flash Messages */}
+          {flashMessages.length > 0 && (
+            <div className="flash-messages-container">
+              {flashMessages.map((message) => (
+                <FlashMessage
+                  key={message.id}
+                  message={message.message}
+                  type={message.type}
+                  onRemove={() => removeFlashMessage(message.id)}
+                />
+              ))}
             </div>
           )}
 
