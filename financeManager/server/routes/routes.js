@@ -9,7 +9,9 @@ const {
   changePassword,
   updateNotifications,
   updatePrivacy,
-  updatePreferences
+  updatePreferences,
+  googleAuth,
+  linkGoogleAccount
 } = require('../controllers/authController');
 const {
   createTransaction,
@@ -50,6 +52,10 @@ const { uploadBankStatement: uploadMiddleware, handleUploadError } = require('..
 router.post('/register', register);
 router.post('/login', login);
 
+// Google OAuth routes
+router.post('/auth-google', authMiddleware, googleAuth);
+router.post('/link-google', authMiddleware, linkGoogleAccount);
+
 // Protected routes (authentication required)
 router.post('/logout', authMiddleware, logout);
 router.get('/profile', authMiddleware, getProfile);
@@ -59,7 +65,7 @@ router.put('/change-password', authMiddleware, changePassword);
 // User preference routes (all protected)
 router.put('/notifications', authMiddleware, updateNotifications);
 router.put('/privacy', authMiddleware, updatePrivacy);
-router.put('/preferences', authMiddleware, updatePreferences);  
+router.put('/preferences', authMiddleware, updatePreferences);
 
 // Transaction routes (all protected)
 router.post('/transactions', authMiddleware, createTransaction);
