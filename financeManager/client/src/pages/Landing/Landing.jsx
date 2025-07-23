@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, TrendingUp, Shield, BarChart3, PieChart, ArrowRight, DollarSign, CheckCircle, AlertCircle, Bell, X } from 'lucide-react';
 import './Landing.css';
 
+
 const FlashMessage = ({ message, type, onRemove }) => {
   const [isRemoving, setIsRemoving] = useState(false);
 
@@ -86,9 +87,10 @@ const Landing = ({ onAuthSuccess }) => {
 
   // You should replace this with your actual backend URL
   const API_BASE_URL = 'http://localhost:5000/api';
-  
+
   // Google OAuth Configuration - Replace with your actual Google Client ID
-  const GOOGLE_CLIENT_ID = 'your-google-client-id.googleusercontent.com';
+  const GOOGLE_CLIENT_ID = "724861474954-9qlfsuk8qjtnn7e9uj5vuhrb3frgm36p.apps.googleusercontent.com";
+
 
   useEffect(() => {
     setIsLoaded(true);
@@ -110,22 +112,12 @@ const Landing = ({ onAuthSuccess }) => {
     document.head.appendChild(script);
   };
 
-  const initializeGoogleSignIn = () => {
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCallback,
-        auto_select: false,
-        cancel_on_tap_outside: true
-      });
-    }
-  };
 
   const handleGoogleCallback = async (response) => {
     setGoogleLoading(true);
     try {
       // Send the Google JWT token to your backend
-      const result = await fetch(`${API_BASE_URL}/auth/google`, {
+      const result = await fetch(`${API_BASE_URL}/auth/auth-google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,24 +160,60 @@ const Landing = ({ onAuthSuccess }) => {
   };
 
   const handleGoogleSignIn = () => {
-    if (window.google) {
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // Fallback to popup if prompt is not displayed
-          window.google.accounts.id.renderButton(
-            document.getElementById('google-signin-button'),
-            {
-              theme: 'outline',
-              size: 'large',
-              width: '100%',
-              text: isLogin ? 'signin_with' : 'signup_with',
-              shape: 'rectangular'
-            }
-          );
-        }
-      });
-    }
-  };
+  if (window.google) {
+    // First try the prompt
+    window.google.accounts.id.prompt((notification) => {
+      console.log('Prompt notification:', notification);
+      
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // Create a temporary button container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.id = 'temp-google-button';
+        buttonContainer.style.position = 'absolute';
+        buttonContainer.style.top = '-9999px';
+        document.body.appendChild(buttonContainer);
+        
+        // Render button with fixed width (use pixels instead of percentage)
+        window.google.accounts.id.renderButton(
+          buttonContainer,
+          {
+            theme: 'outline',
+            size: 'large',
+            width: 300, // Use pixels instead of percentage
+            text: isLogin ? 'signin_with' : 'signup_with',
+            shape: 'rectangular'
+          }
+        );
+        
+        // Trigger click on the rendered button
+        setTimeout(() => {
+          const button = buttonContainer.querySelector('[role="button"]');
+          if (button) {
+            button.click();
+          }
+          // Clean up
+          document.body.removeChild(buttonContainer);
+        }, 100);
+      }
+    });
+  } else {
+    console.error('Google SDK not loaded');
+    addFlashMessage('Google sign-in is not available. Please try again.', 'error');
+  }
+};
+
+// Also update your initialization
+const initializeGoogleSignIn = () => {
+  if (window.google) {
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCallback,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+      use_fedcm_for_prompt: false // Add this to avoid FedCM issues
+    });
+  }
+};
 
   const handleInputChange = (e) => {
     setFormData({
@@ -458,7 +486,7 @@ const Landing = ({ onAuthSuccess }) => {
             </div>
 
             <div className="social-buttons">
-              <button 
+              <button
                 className={`social-button google ${googleLoading ? 'loading' : ''}`}
                 onClick={handleGoogleSignIn}
                 disabled={googleLoading}
