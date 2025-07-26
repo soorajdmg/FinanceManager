@@ -47,18 +47,22 @@ const register = async (req, res) => {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Create new user
-    const newUser = new User({
+    user = new User({
       firstName,
-      lastName,
+      lastName: lastName || 'User',
       email,
-      phone,
-      passwordHash,
+      profilePicture: picture,
+      oauth: {
+        google: {
+          id: googleId,
+          email
+        }
+      },
       preferences: {
-        language,
-        timezone,
-        dateFormat,
-        theme
+        language: 'en',
+        timezone: 'UTC-5',
+        dateFormat: 'MM/DD/YYYY',
+        theme: 'light'
       }
     });
 
@@ -574,7 +578,11 @@ const googleAuth = async (req, res) => {
 
     if (user) {
       // Update existing user's Google OAuth info if needed
-      if (!user.oauth.google.id) {
+      if (!user.oauth || !user.oauth.google || !user.oauth.google.id) {
+        // Initialize oauth structure if it doesn't exist
+        if (!user.oauth) user.oauth = {};
+        if (!user.oauth.google) user.oauth.google = {};
+
         user.oauth.google.id = googleId;
         user.oauth.google.email = email;
         await user.save();
@@ -591,6 +599,7 @@ const googleAuth = async (req, res) => {
         lastName: lastName || '',
         email,
         profilePicture: picture,
+        passwordHash: null,
         oauth: {
           google: {
             id: googleId,

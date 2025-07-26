@@ -9,9 +9,12 @@ const userSchema = new mongoose.Schema({
   },
   lastName: {
     type: String,
-    required: true,
+    required: function () {
+      return !(this.oauth && this.oauth.google && this.oauth.google.id);
+    },
     trim: true,
-    maxlength: 50
+    maxlength: 50,
+    default: 'User'
   },
   email: {
     type: String,
@@ -28,13 +31,27 @@ const userSchema = new mongoose.Schema({
   },
   passwordHash: {
     type: String,
-    required: true
+    required: function () {
+      return !(this.oauth && this.oauth.google && this.oauth.google.id);
+    }
   },
   profilePicture: {
     type: String,
     default: null,
     trim: true
   },
+  // Add this field after profilePicture and before notifications
+  oauth: {
+    google: {
+      id: {
+        type: String,
+        sparse: true
+      },
+      email: String,
+      profilePicture: String
+    }
+  },
+
 
   // Notification Preferences
   notifications: {
