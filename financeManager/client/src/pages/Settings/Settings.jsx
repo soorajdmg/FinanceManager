@@ -92,6 +92,7 @@ const FlashMessage = ({ message, type, onRemove }) => {
 
 const Settings = () => {
   const [activeSection, setActiveSection] = useState('profile');
+  const [isOAuthUser, setIsOAuthUser] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -213,6 +214,8 @@ const Settings = () => {
           reportFrequency: profile.user?.preferences?.reportFrequency || 'weekly'
         }
       }));
+
+      setIsOAuthUser(!!(profile.user?.oauth?.google?.id && !profile.user?.passwordHash));
 
     } catch (err) {
       console.error('Error fetching profile:', err);
@@ -746,26 +749,28 @@ const Settings = () => {
                     <div className="privacy-section">
                       <h3 className="subsection-title">Change Password</h3>
                       <div className="password-form">
-                        <div className="password-field">
-                          <label className="password-label">Current Password</label>
-                          <div className="password-input-container">
-                            <input
-                              type={showPassword ? 'text' : 'password'}
-                              className="password-input"
-                              placeholder="Enter current password"
-                              value={passwordData.currentPassword}
-                              onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                            />
-                            <button
-                              type="button"
-                              className="password-toggle-btn"
-                              onClick={() => setShowPassword(!showPassword)}
-                              aria-label={showPassword ? 'Hide password' : 'Show password'}
-                            >
-                              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
+                        {!isOAuthUser && (
+                          <div className="password-field">
+                            <label className="password-label">Current Password</label>
+                            <div className="password-input-container">
+                              <input
+                                type={showPassword ? 'text' : 'password'}
+                                className="password-input"
+                                placeholder="Enter current password"
+                                value={passwordData.currentPassword}
+                                onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                              />
+                              <button
+                                type="button"
+                                className="password-toggle-btn"
+                                onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                              >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        )}
 
                         <div className="password-field">
                           <label className="password-label">New Password</label>
@@ -797,7 +802,7 @@ const Settings = () => {
                           <button
                             className="password-submit-btn"
                             onClick={changePassword}
-                            disabled={isSaving || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                            disabled={isSaving || (!isOAuthUser && !passwordData.currentPassword) || !passwordData.newPassword || !passwordData.confirmPassword}
                           >
                             {isSaving ? (
                               <>
@@ -958,7 +963,7 @@ const Settings = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
