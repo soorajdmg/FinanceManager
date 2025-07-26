@@ -53,8 +53,8 @@ router.post('/register', register);
 router.post('/login', login);
 
 // Google OAuth routes
-router.post('/auth-google', authMiddleware, googleAuth);
-router.post('/link-google', authMiddleware, linkGoogleAccount);
+router.post('/auth-google', googleAuth);
+router.post('/link-google', linkGoogleAccount);
 
 // Protected routes (authentication required)
 router.post('/logout', authMiddleware, logout);

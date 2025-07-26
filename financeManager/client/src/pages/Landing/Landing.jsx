@@ -117,7 +117,7 @@ const Landing = ({ onAuthSuccess }) => {
     setGoogleLoading(true);
     try {
       // Send the Google JWT token to your backend
-      const result = await fetch(`${API_BASE_URL}/auth/auth-google`, {
+      const result = await fetch(`${API_BASE_URL}/auth-google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,60 +160,60 @@ const Landing = ({ onAuthSuccess }) => {
   };
 
   const handleGoogleSignIn = () => {
-  if (window.google) {
-    // First try the prompt
-    window.google.accounts.id.prompt((notification) => {
-      console.log('Prompt notification:', notification);
-      
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // Create a temporary button container
-        const buttonContainer = document.createElement('div');
-        buttonContainer.id = 'temp-google-button';
-        buttonContainer.style.position = 'absolute';
-        buttonContainer.style.top = '-9999px';
-        document.body.appendChild(buttonContainer);
-        
-        // Render button with fixed width (use pixels instead of percentage)
-        window.google.accounts.id.renderButton(
-          buttonContainer,
-          {
-            theme: 'outline',
-            size: 'large',
-            width: 300, // Use pixels instead of percentage
-            text: isLogin ? 'signin_with' : 'signup_with',
-            shape: 'rectangular'
-          }
-        );
-        
-        // Trigger click on the rendered button
-        setTimeout(() => {
-          const button = buttonContainer.querySelector('[role="button"]');
-          if (button) {
-            button.click();
-          }
-          // Clean up
-          document.body.removeChild(buttonContainer);
-        }, 100);
-      }
-    });
-  } else {
-    console.error('Google SDK not loaded');
-    addFlashMessage('Google sign-in is not available. Please try again.', 'error');
-  }
-};
+    if (window.google) {
+      // First try the prompt
+      window.google.accounts.id.prompt((notification) => {
+        console.log('Prompt notification:', notification);
 
-// Also update your initialization
-const initializeGoogleSignIn = () => {
-  if (window.google) {
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleCallback,
-      auto_select: false,
-      cancel_on_tap_outside: true,
-      use_fedcm_for_prompt: false // Add this to avoid FedCM issues
-    });
-  }
-};
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Create a temporary button container
+          const buttonContainer = document.createElement('div');
+          buttonContainer.id = 'temp-google-button';
+          buttonContainer.style.position = 'absolute';
+          buttonContainer.style.top = '-9999px';
+          document.body.appendChild(buttonContainer);
+
+          // Render button with fixed width (use pixels instead of percentage)
+          window.google.accounts.id.renderButton(
+            buttonContainer,
+            {
+              theme: 'outline',
+              size: 'large',
+              width: 300, // Use pixels instead of percentage
+              text: isLogin ? 'signin_with' : 'signup_with',
+              shape: 'rectangular'
+            }
+          );
+
+          // Trigger click on the rendered button
+          setTimeout(() => {
+            const button = buttonContainer.querySelector('[role="button"]');
+            if (button) {
+              button.click();
+            }
+            // Clean up
+            document.body.removeChild(buttonContainer);
+          }, 100);
+        }
+      });
+    } else {
+      console.error('Google SDK not loaded');
+      addFlashMessage('Google sign-in is not available. Please try again.', 'error');
+    }
+  };
+
+  // Also update your initialization
+  const initializeGoogleSignIn = () => {
+    if (window.google) {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCallback,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        use_fedcm_for_prompt: false // Add this to avoid FedCM issues
+      });
+    }
+  };
 
   const handleInputChange = (e) => {
     setFormData({
