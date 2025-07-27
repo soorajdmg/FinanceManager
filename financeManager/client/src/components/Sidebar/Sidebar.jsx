@@ -6,7 +6,6 @@ import {
   DollarSign,
   Clipboard,
   Upload,
-  User,
   Settings
 } from 'lucide-react';
 import './Sidebar.css';
@@ -23,7 +22,8 @@ const Sidebar = ({ activeSection, onNavigate, isDarkMode }) => {
         { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
         { id: 'transactions', icon: CreditCard, label: 'Transactions' },
         { id: 'budget', icon: DollarSign, label: 'Budget' },
-        { id: 'reports', icon: Clipboard, label: 'Reports' },
+        { id: 'investments', icon: TrendingUp, label: 'Investments' },
+        { id: 'reports', icon: Clipboard, label: 'Reports' }
       ]
     },
     {
