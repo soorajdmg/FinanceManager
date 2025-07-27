@@ -14,7 +14,6 @@ import Transactions from './pages/Transactions/Transactions.jsx';
 import Budget from './pages/Budget/Budget.jsx';
 import Reports from './pages/Reports/Reports.jsx';
 import DocumentUpload from './pages/DocumentUpload/DocumentUpload.jsx';
-import Profile from './pages/Profile/Profile.jsx';
 import Settings from './pages/Settings/Settings.jsx';
 
 import './App.css';
@@ -137,7 +136,6 @@ const App = () => {
     if (path === '/budget') return 'budget';
     if (path === '/reports') return 'reports';
     if (path === '/upload') return 'upload';
-    if (path === '/profile') return 'profile';
     if (path === '/settings') return 'settings';
     return 'dashboard';
   };
@@ -159,9 +157,6 @@ const App = () => {
         break;
       case 'upload':
         navigate('/upload');
-        break;
-      case 'profile':
-        navigate('/profile');
         break;
       case 'settings':
         navigate('/settings');
@@ -290,23 +285,6 @@ const App = () => {
               user={user}
             >
               <DocumentUpload onTransactionsImported={handleTransactionsImported} />
-            </PrivateLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute isAuthenticated={isAuthenticated}>
-            <PrivateLayout
-              isDarkMode={isDarkMode}
-              onDarkModeChange={handleDarkModeChange}
-              activeSection={getActiveSection()}
-              onNavigate={handleNavigation}
-              user={user}
-            >
-              <Profile />
             </PrivateLayout>
           </ProtectedRoute>
         }

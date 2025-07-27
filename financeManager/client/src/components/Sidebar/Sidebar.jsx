@@ -24,12 +24,11 @@ const Sidebar = ({ activeSection, onNavigate, isDarkMode }) => {
         { id: 'transactions', icon: CreditCard, label: 'Transactions' },
         { id: 'budget', icon: DollarSign, label: 'Budget' },
         { id: 'reports', icon: Clipboard, label: 'Reports' },
-        { id: 'upload', icon: Upload, label: 'Document Upload' }
       ]
     },
     {
       items: [
-        { id: 'profile', icon: User, label: 'Profile' },
+        { id: 'upload', icon: Upload, label: 'Document Upload' },
         { id: 'settings', icon: Settings, label: 'Settings' }
       ]
     }
