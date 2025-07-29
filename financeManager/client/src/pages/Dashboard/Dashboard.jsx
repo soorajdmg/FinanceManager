@@ -3,7 +3,6 @@ import { TrendingUp, TrendingDown, DollarSign, PieChart, Activity, ArrowUpRight,
 import './Dashboard.css';
 
 
-// Move AnimatedPieChart outside of Dashboard component
 const AnimatedPieChart = ({ data, size = 200, isDarkMode }) => {
   const svgRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -45,7 +44,10 @@ const AnimatedPieChart = ({ data, size = 200, isDarkMode }) => {
       emerald: '#10b981',
       violet: '#8b5cf6',
       amber: '#f59e0b',
-      pink: '#da80e2ff'
+      pink: '#da80e2ff',
+      red: '#ef4444',
+      cyan: '#06b6d4',
+      lime: '#84cc16',
     };
     return colors[colorName] || colors.blue;
   };
@@ -72,6 +74,10 @@ const AnimatedPieChart = ({ data, size = 200, isDarkMode }) => {
 
         {data.map((item, index) => {
           const angle = (item.amount / total) * 360;
+
+          // Skip rendering if angle is too small (less than 1 degree) to avoid visual clutter
+          if (angle < 1) return null;
+
           const path = createPath(currentAngle, currentAngle + angle);
           currentAngle += angle;
 
@@ -537,14 +543,25 @@ const Dashboard = ({ isDarkMode, userData }) => {
 
   // Generate pie chart data from category spending
   const generatePieChartData = () => {
-    // Always use total category spending for pie chart
+    // Use all category spending for pie chart (not just top 5)
     const categoryData = stats?.totalCategorySpending?.categories || stats?.totalCategorySpending;
 
     if (!categoryData || categoryData.length === 0) return [];
 
-    const colors = ['blue', 'emerald', 'violet', 'amber', 'pink'];
+    // Expanded color palette for all 10 categories
+    const colors = [
+      'blue',      // Shopping
+      'emerald',   // Food
+      'violet',    // Fuel
+      'amber',     // Movie
+      'pink',      // Recharge
+      'red',       // Pappa
+      'cyan',
+      'lime',
+    ];
 
-    return categoryData.slice(0, 5).map((category, index) => ({
+    // Return all categories instead of just top 5
+    return categoryData.map((category, index) => ({
       label: category.category,
       amount: category.amount,
       color: colors[index % colors.length]

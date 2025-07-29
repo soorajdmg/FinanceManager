@@ -869,6 +869,18 @@
     background: #da80e2ff;
 }
 
+.expense-dot.red {
+    background: #ef4444;
+}
+
+.expense-dot.cyan {
+    background-color: #06b6d4;
+}
+
+.expense-dot.lime {
+    background-color: #84cc16;
+}
+
 .expense-label {
     font-size: 0.875rem;
     color: #334155;
