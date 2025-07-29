@@ -12,6 +12,7 @@ import LandingPage from './pages/Landing/Landing.jsx';
 import Dashboard from './pages/Dashboard/Dashboard.jsx';
 import Transactions from './pages/Transactions/Transactions.jsx';
 import Budget from './pages/Budget/Budget.jsx';
+import Investments from './pages/Investments/Investments.jsx';
 import Reports from './pages/Reports/Reports.jsx';
 import DocumentUpload from './pages/DocumentUpload/DocumentUpload.jsx';
 import Settings from './pages/Settings/Settings.jsx';
@@ -134,6 +135,7 @@ const App = () => {
     if (path === '/' || path === '/dashboard') return 'dashboard';
     if (path === '/transactions') return 'transactions';
     if (path === '/budget') return 'budget';
+    if (path === '/investments') return 'investments';
     if (path === '/reports') return 'reports';
     if (path === '/upload') return 'upload';
     if (path === '/settings') return 'settings';
@@ -151,6 +153,9 @@ const App = () => {
         break;
       case 'budget':
         navigate('/budget');
+        break;
+      case 'investments':
+        navigate('/investments');
         break;
       case 'reports':
         navigate('/reports');
@@ -251,6 +256,23 @@ const App = () => {
               user={user}
             >
               <Budget />
+            </PrivateLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/investments"
+        element={
+          <ProtectedRoute isAuthenticated={isAuthenticated}>
+            <PrivateLayout
+              isDarkMode={isDarkMode}
+              onDarkModeChange={handleDarkModeChange}
+              activeSection={getActiveSection()}
+              onNavigate={handleNavigation}
+              user={user}
+            >
+              <Investments />
             </PrivateLayout>
           </ProtectedRoute>
         }
