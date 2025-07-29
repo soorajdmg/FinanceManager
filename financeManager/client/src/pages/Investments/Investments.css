@@ -13,6 +13,138 @@ dark-mode .categories-title {
     color: rgba(240, 246, 255, 0.6);
 }
 
+/* Portfolio Analytics Section */
+.portfolio-analytics {
+    margin: 3rem 0;
+    animation: fadeInUp 0.6s ease forwards;
+    animation-delay: 0.3s;
+}
+
+.analytics-header {
+    margin-bottom: 2rem;
+}
+
+.analytics-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #475569;
+    margin: 0 0 0.5rem 0;
+}
+
+.analytics-subtitle {
+    font-size: 1rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.analytics-card {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 1.5rem 0;
+}
+
+/* Risk diversification styles */
+.risk-segment {
+    margin-bottom: 1rem;
+}
+
+.risk-bar {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.risk-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+.risk-fill.risk-low {
+    background: #22c55e;
+}
+
+.risk-fill.risk-medium {
+    background: #f59e0b;
+}
+
+.risk-fill.risk-high {
+    background: #ef4444;
+}
+
+.risk-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+}
+
+.risk-label {
+    color: #64748b;
+}
+
+.risk-value {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+/* Performance leaders styles */
+.leader-item {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.leader-item.best {
+    background: rgba(34, 197, 94, 0.05);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.leader-item.worst {
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.leader-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+.leader-name {
+    display: block;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
+}
+
+.leader-return {
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
 /* Investment List - Dark Mode */
 .categories-list {
     display: flex;
@@ -22,13 +154,11 @@ dark-mode .categories-title {
 
 .investment-category-item {
     background: #ffffff;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.02);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(226, 232, 240, 0.6);
-    position: relative;
-    overflow: hidden;
-    opacity: 1;
+    margin-bottom: 1.5rem;
     transition: all 0.3s ease;
 }
 
@@ -61,6 +191,130 @@ dark-mode .categories-title {
 .dark-mode .investment-category-item:hover {
     background: rgba(55, 65, 81, 0.2);
     border-color: rgba(55, 65, 81, 0.5);
+}
+
+/* Add new performance indicator styles */
+.performance-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.performance-indicator.excellent {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.performance-indicator.good {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.performance-indicator.poor {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Add quick stats grid */
+.quick-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.4);
+}
+
+.quick-stat {
+    text-align: center;
+}
+
+.quick-stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
+}
+
+.quick-stat-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Compare button styles */
+.compare-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #ffffff;
+    color: #475569;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.compare-btn:hover:not(.disabled) {
+    background: #f8fafc;
+    border-color: #7d8a9c;
+    color: #374151;
+}
+
+.compare-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.dark-mode .compare-btn {
+    background: rgba(55, 65, 81, 0.8);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    color: rgba(240, 246, 255, 0.9);
+}
+
+/* Investment selector styles */
+.investment-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 0.5rem;
+}
+
+.investment-checkbox {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+
+.checkbox-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.dark-mode .investment-selector {
+    background: rgba(55, 65, 81, 0.3);
+}
+
+.dark-mode .checkbox-label {
+    color: rgba(240, 246, 255, 0.6);
 }
 
 .category-item-header {
@@ -633,6 +887,7 @@ dark-mode .categories-title {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -643,6 +898,7 @@ dark-mode .categories-title {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -654,6 +910,7 @@ dark-mode .categories-title {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -665,6 +922,7 @@ dark-mode .categories-title {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -676,11 +934,11 @@ dark-mode .categories-title {
     .investments-summary-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .category-item-stats {
         gap: 1rem;
     }
-    
+
     .projection-stats {
         gap: 1rem;
     }
@@ -692,40 +950,42 @@ dark-mode .categories-title {
         gap: 1rem;
         align-items: flex-start;
     }
-    
+
     .header-actions {
         width: 100%;
         justify-content: space-between;
     }
-    
+
     .investments-summary-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .category-item-header {
         flex-direction: column;
         gap: 1rem;
         align-items: flex-start;
     }
-    
+
     .category-item-stats {
         width: 100%;
         justify-content: space-between;
     }
-    
+
     .form-row {
         grid-template-columns: 1fr;
     }
-    
+
     .modal-actions {
         flex-direction: column-reverse;
     }
-    
+
     .projection-stats {
         flex-direction: column;
         gap: 0.75rem;
     }
-}investments-container {
+}
+
+investments-container {
     min-height: 100vh;
     background-color: rgb(252, 251, 249);
     border-radius: 2rem;
